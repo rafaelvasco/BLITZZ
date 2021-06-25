@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BLITZZ_CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "build_engine --path C:\\DEV\\BLITZZ\\BLITZZ"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "assets": {
+    "base": {
+      "shaders": [
+        {
+          "id": "base_shader",
+          "vs_path": "Shaders/base/base_vs.sc",
+          "fs_path": "Shaders/base/base_fs.sc"
+        }
+      ],
+      "text_files": [
+        {
+          "id": "gamecontrollerdb",
+          "path": "TextFiles/gamecontrollerdb.txt"
+        }
+      ],
+      "images": [
+        {
+          "id": "logo1",
+          "path": "Images/blitzz_logo1.png"
+        },
+        {
+          "id": "logo2",
+          "path": "Images/blitzz_logo2.png"
+        }
+      ],
+      "fonts": [
+        {
+          "id": "tiny",
+          "faces": [
+            {
+              "path": "Fonts/monogram-extended.ttf",
+              "size": 16,
+              "char_ranges": [ "BasicLatin" ]
+            }
+          ],
+          "line_spacing": 20,
+          "spacing": 2,
+          "default_char": " "
+        },
+        {
+          "id": "chunky",
+          "faces": [
+            {
+              "path": "Fonts/ThaleahFat.ttf",
+              "size": 48,
+              "char_ranges": [ "BasicLatin" ]
+            }
+          ],
+          "line_spacing": 20,
+          "spacing": 2,
+          "default_char": " "
+        }
+      ]
+    }
+  }
+}

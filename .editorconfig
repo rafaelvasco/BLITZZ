@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CS0649: Campo "SDL2.SDL_Finger.y" nunca é atribuído e sempre terá seu valor padrão 0
+dotnet_diagnostic.CS0649.severity = none

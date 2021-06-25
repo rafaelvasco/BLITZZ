@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31402.337
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BLITZZ", "BLITZZ\BLITZZ.csproj", "{0A11F98F-461F-412F-A610-85B25AED1B28}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EXAMPLES", "EXAMPLES", "{46094FAF-A10D-49AA-9417-5454AB162AF0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EMPTY", "EMPTY\EMPTY.csproj", "{C3E4BF78-40F5-44DB-84DA-F7977B76D103}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLITZZ_CLI", "BLITZZ_CLI\BLITZZ_CLI.csproj", "{26A53D35-862B-4125-9EAB-FA8DD3CFA317}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0A11F98F-461F-412F-A610-85B25AED1B28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A11F98F-461F-412F-A610-85B25AED1B28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A11F98F-461F-412F-A610-85B25AED1B28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A11F98F-461F-412F-A610-85B25AED1B28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3E4BF78-40F5-44DB-84DA-F7977B76D103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3E4BF78-40F5-44DB-84DA-F7977B76D103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3E4BF78-40F5-44DB-84DA-F7977B76D103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3E4BF78-40F5-44DB-84DA-F7977B76D103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26A53D35-862B-4125-9EAB-FA8DD3CFA317}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26A53D35-862B-4125-9EAB-FA8DD3CFA317}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26A53D35-862B-4125-9EAB-FA8DD3CFA317}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26A53D35-862B-4125-9EAB-FA8DD3CFA317}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C3E4BF78-40F5-44DB-84DA-F7977B76D103} = {46094FAF-A10D-49AA-9417-5454AB162AF0}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F54DAC1A-DED2-4A88-A8E1-9398FB5EDB90}
+	EndGlobalSection
+EndGlobal
