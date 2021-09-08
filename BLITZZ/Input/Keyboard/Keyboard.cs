@@ -26,22 +26,12 @@ namespace BLITZZ.Input
 
         public static bool IsKeyDown(KeyCode keyCode)
         {
-            if (_keyCodeStates.TryGetValue(keyCode, out var down))
-            {
-                return down;
-            }
-
-            return false;
+            return _keyCodeStates.TryGetValue(keyCode, out var down) && down;
         }
 
         public static bool IsKeyDown(ScanCode scanCode)
         {
-            if (_scanCodeStates.TryGetValue(scanCode, out var down))
-            {
-                return down;
-            }
-
-            return false;
+            return _scanCodeStates.TryGetValue(scanCode, out var down) && down;
         }
 
         public static bool IsKeyUp(KeyCode keyCode) => !IsKeyDown(keyCode);
@@ -90,13 +80,9 @@ namespace BLITZZ.Input
                 return;
             }
 
-            string textInput;
-            unsafe
-            {
-                textInput = Marshal.PtrToStringUTF8(
-                    new IntPtr(ev.text.text)
-                );
-            }
+            var textInput = Marshal.PtrToStringUTF8(
+                new IntPtr(ev.text.text)
+            );
 
             _textInputEventArgs.Text = textInput;
 

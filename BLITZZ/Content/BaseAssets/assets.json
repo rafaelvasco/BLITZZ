@@ -27,29 +27,15 @@
       "fonts": [
         {
           "id": "tiny",
-          "faces": [
-            {
-              "path": "Fonts/monogram-extended.ttf",
-              "size": 16,
-              "char_ranges": [ "BasicLatin" ]
-            }
-          ],
-          "line_spacing": 20,
-          "spacing": 2,
-          "default_char": " "
+          "size": 16,
+          "path": "Fonts/monogram-extended.ttf",
+          "ranges":  ["BasicLatin"] 
         },
         {
           "id": "chunky",
-          "faces": [
-            {
-              "path": "Fonts/ThaleahFat.ttf",
-              "size": 48,
-              "char_ranges": [ "BasicLatin" ]
-            }
-          ],
-          "line_spacing": 20,
-          "spacing": 2,
-          "default_char": " "
+          "size": 48,
+          "path": "Fonts/ThaleahFat.ttf",
+          "ranges": ["BasicLatin"]
         }
       ]
     }

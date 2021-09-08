@@ -1,10 +1,11 @@
 ﻿using MessagePack;
 using System.Collections.Generic;
+using BLITZZ.Content.Font;
 
 namespace BLITZZ.Content
 {
     [MessagePackObject]
-    public class ResourcePak
+    public class AssetPak
     {
 
         [Key(0)]
@@ -23,24 +24,27 @@ namespace BLITZZ.Content
         public Dictionary<string, TrueTypeFontData> Fonts { get; set; }
 
         [Key(5)]
-        public Dictionary<string, TextFileData> TextFiles { get; set; }
+        public Dictionary<string, BitmapFontData> BitmapFonts { get; set; }
 
         [Key(6)]
-        public Dictionary<string, AudioFileData> AudioFiles { get; set; }
-
+        public Dictionary<string, TextFileData> TextFiles { get; set; }
 
         [Key(7)]
+        public Dictionary<string, AudioFileData> AudioFiles { get; set; }
+
+        [Key(8)]
         public int TotalResourcesCount { get; set; }
 
-        public ResourcePak(string name)
+        public AssetPak(string name)
         {
             Name = name;
-            //Images = new Dictionary<string, ImageData>();
-            //Atlases = new Dictionary<string, TextureAtlasData>();
-            //Shaders = new Dictionary<string, ShaderProgramData>();
-            //Fonts = new Dictionary<string, FontData>();
-            //TextFiles = new Dictionary<string, TextFileData>();
-            //AudioFiles = new Dictionary<string, AudioFileData>();
+            Images = new Dictionary<string, ImageData>();
+            Atlases = new Dictionary<string, TextureAtlasData>();
+            Shaders = new Dictionary<string, ShaderProgramData>();
+            Fonts = new Dictionary<string, TrueTypeFontData>();
+            BitmapFonts = new Dictionary<string, BitmapFontData>();
+            TextFiles = new Dictionary<string, TextFileData>();
+            AudioFiles = new Dictionary<string, AudioFileData>();
             TotalResourcesCount = 0;
         }
 

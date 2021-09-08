@@ -2,59 +2,45 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
+
+
 namespace BLITZZ.Content.Font
 {
     public class TrueTypeFont : Font
     {
 
-        private readonly int _height;
-        private readonly int _maxBearingY;
-        private readonly char[] _chars;
-        private readonly TrueTypeGlyph[] _glyphs;
-        private readonly CharRegion[] _regions;
-        private readonly Dictionary<int, int> _kernings = new();
-        private readonly Texture _atlas;
-        private int _lineSpacing;
+        private readonly Dictionary<int, float> _kernings;
         private readonly int _defaultGlyphIndex;
-
-
-        public override bool IsKerningEnabled { get; set; } = true;
-
-        public override int LineSpacing => _lineSpacing;
-
-        public override int Height => _height;
-
-        public override Texture Texture => _atlas;
 
 
         internal TrueTypeFont(Texture atlas, TrueTypeFontData fontData)
         {
-            _height = fontData.Size;
-            _chars = fontData.Chars;
-            _kernings = fontData.CharKernings;
-            _atlas = atlas;
-            _lineSpacing = fontData.BaseLineSpacing;
-            _glyphs = new TrueTypeGlyph[_chars.Length];
+            var chars = fontData.Chars;
+            
+            Height = fontData.Size;
+            Texture = atlas;
+            LineSpacing = fontData.LineSpacing;
+            Glyphs = new Glyph[chars.Length];
+            _kernings = fontData.GlyphKernings;
 
             var regions = new Stack<CharRegion>();
 
-            for (int i = 0; i < _chars.Length; ++i)
+            for (int i = 0; i < chars.Length; ++i)
             {
-                _glyphs[i] = new TrueTypeGlyph()
+                Glyphs[i] = new Glyph()
                 {
-                    Region = fontData.CharRegions[i],
-                    XAdvance = fontData.CharXAdvances[i],
-                    Bearing = fontData.CharBearings[i]
+                    Region = fontData.GlyphRegions[i],
+                    XAdvance = fontData.GlyphXAdvances[i],
+                    Offset = fontData.GlyphOffsets[i]
                 };
 
-                if (regions.Count == 0 || _chars[i] > (regions.Peek().End + 1))
+                if (regions.Count == 0 || chars[i] > (regions.Peek().End + 1))
                 {
                     // New Region
 
-                    regions.Push(new CharRegion(_chars[i], i));
+                    regions.Push(new CharRegion(chars[i], i));
                 }
-                else if (_chars[i] == (regions.Peek().End + 1))
+                else if (chars[i] == (regions.Peek().End + 1))
                 {
                     // Add char in current region
 
@@ -70,9 +56,9 @@ namespace BLITZZ.Content.Font
                 }
             }
 
-            _regions = regions.ToArray();
+            Regions = regions.ToArray();
 
-            Array.Reverse(_regions);
+            Array.Reverse(Regions);
 
             if(!TryGetGlyphIndex('?', out _defaultGlyphIndex)) {
                 if (!TryGetGlyphIndex(' ', out _defaultGlyphIndex))
@@ -82,13 +68,12 @@ namespace BLITZZ.Content.Font
             }
         }
 
-
         public override Size Measure(string text)
         {
             var width = 0;
 
             var maxWidth = width;
-            var maxHeight = (text.Count(c => c == '\n') + 1) * LineSpacing;
+            var maxHeight = (int)((text.Count(c => c == '\n') + 1) * LineSpacing);
 
             foreach (var c in text)
             {
@@ -104,23 +89,21 @@ namespace BLITZZ.Content.Font
 
                 var glyph = GetGlyphOrDefault(c);
 
-                width += glyph.HorizontalAdvance;
+                width += (int)glyph.XAdvance;
             }
 
-            if (maxWidth < width)
+            if (width > maxWidth)
                 maxWidth = width;
 
             return new Size(maxWidth, maxHeight);
         }
 
-        public override IFontGlyph GetGlyphOrDefault(char c)
+        public override Glyph GetGlyphOrDefault(char c)
         {
-            if (TryGetGlyphIndex(c, out var glyphIdx)) return _glyphs[glyphIdx];
-
-            return _glyphs[_defaultGlyphIndex];
+            return TryGetGlyphIndex(c, out var glyphIdx) ? Glyphs[glyphIdx] : Glyphs[_defaultGlyphIndex];
         }
 
-        public override int GetKerning(char left, char right)
+        public override float GetKerning(char left, char right)
         {
             var key = (left << 16) | right;
             
@@ -130,25 +113,29 @@ namespace BLITZZ.Content.Font
 
         protected override void FreeManagedResources()
         {
-            _atlas?.Dispose();
             _kernings.Clear();
+        }
+
+        protected override void FreeNativeResources()
+        {
+            Texture?.Dispose();
         }
 
         private unsafe bool TryGetGlyphIndex(char c, out int index)
         {
             // Do a binary search on char regions
 
-            fixed (CharRegion* pRegions = _regions)
+            fixed (CharRegion* pRegions = Regions)
             {
                 int regionIdx = -1;
                 var left = 0;
-                var right = _regions.Length - 1;
+                var right = Regions.Length - 1;
 
                 while (left <= right)
                 {
                     var mid = (left + right) / 2;
 
-                    Debug.Assert(mid >= 0 && mid < _regions.Length, "Index was outside of array bounds");
+                    Debug.Assert(mid >= 0 && mid < Regions.Length, "Index was outside of array bounds");
 
                     if (pRegions[mid].End < c)
                     {

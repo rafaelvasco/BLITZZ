@@ -17,6 +17,9 @@ namespace BLITZZ.Content
         [JsonPropertyName("fonts")]
         public List<FontAssetInfo> Fonts { get; set; }
 
+        [JsonPropertyName("bitmap_fonts")]
+        public List<FontAssetInfo> BitmapFonts { get; set; }
+
         [JsonPropertyName("atlases")]
         public List<AtlasAssetInfo> Atlases { get; set; }
 

@@ -16,12 +16,9 @@
             };
         }
 
-        private string EncodeAnsiIfConsole(string s, Sink sink, byte r, byte g, byte b)
+        private static string EncodeAnsiIfConsole(string s, Sink sink, byte r, byte g, byte b)
         {
-            if (sink is ConsoleSink)
-                return s.AnsiColorEncodeRGB(r, g, b);
-
-            return s;
+            return sink is ConsoleSink ? s.AnsiColorEncodeRGB(r, g, b) : s;
         }
     }
 }

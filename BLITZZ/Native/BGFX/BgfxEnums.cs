@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLITZZ.Native.BGFX
 {
@@ -562,6 +558,91 @@ namespace BLITZZ.Native.BGFX
 		/// </summary>
 		All = 0x000000ff,
 	}
+
+    /// <summary>
+    /// Specifies debug text colors.
+    /// </summary>
+    public enum DebugColor {
+        /// <summary>
+        /// Black.
+        /// </summary>
+        Black,
+
+        /// <summary>
+        /// Blue.
+        /// </summary>
+        Blue,
+
+        /// <summary>
+        /// Green.
+        /// </summary>
+        Green,
+
+        /// <summary>
+        /// Cyan.
+        /// </summary>
+        Cyan,
+
+        /// <summary>
+        /// Red.
+        /// </summary>
+        Red,
+
+        /// <summary>
+        /// Magenta.
+        /// </summary>
+        Magenta,
+
+        /// <summary>
+        /// Brown.
+        /// </summary>
+        Brown,
+
+        /// <summary>
+        /// Light gray.
+        /// </summary>
+        LightGray,
+
+        /// <summary>
+        /// Dark gray.
+        /// </summary>
+        DarkGray,
+
+        /// <summary>
+        /// Light blue.
+        /// </summary>
+        LightBlue,
+
+        /// <summary>
+        /// Light green.
+        /// </summary>
+        LightGreen,
+
+        /// <summary>
+        /// Light cyan.
+        /// </summary>
+        LightCyan,
+
+        /// <summary>
+        /// Light red.
+        /// </summary>
+        LightRed,
+
+        /// <summary>
+        /// Light magenta.
+        /// </summary>
+        LightMagenta,
+
+        /// <summary>
+        /// Yellow.
+        /// </summary>
+        Yellow,
+
+        /// <summary>
+        /// White.
+        /// </summary>
+        White
+    }
 
 	[Flags]
 	public enum DebugFlags : uint

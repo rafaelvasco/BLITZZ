@@ -72,6 +72,6 @@ namespace BLITZZ.Logging
         }
 
         private static string GetAssemblyLogPath(Assembly assembly)
-            => Path.Combine(LogRoot, $"{assembly.GetName().Name}_{DateTime.Now:yyyy-MM-dd_hh_mm_ss}.log");
+            => Path.Combine(LogRoot, $"{assembly.GetName().Name}.log");
     }
 }

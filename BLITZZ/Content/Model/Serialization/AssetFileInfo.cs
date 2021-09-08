@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using BLITZZ.Content.Font;
 
 namespace BLITZZ.Content
 {
@@ -22,34 +23,44 @@ namespace BLITZZ.Content
 
     }
 
-    public class FontFaceAssetInfo
-    {
-        [JsonPropertyName("path")]
-        public string Path { get; set; }
-
-        [JsonPropertyName("size")]
-        public int Size { get; set; }
-
-        [JsonPropertyName("char_ranges")]
-        public string[] CharRanges { get; set; }
-    }
 
     public class FontAssetInfo
     {
         [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonPropertyName("faces")]
-        public FontFaceAssetInfo[] Faces { get; set; }
+        [JsonPropertyName("path")]
+        public string Path { get; set; }
 
-        [JsonPropertyName("line_spacing")]
-        public int LineSpacing { get; set; }
+        [JsonPropertyName("size")]
+        public int Size { get; set; }
 
-        [JsonPropertyName("spacing")]
-        public int Spacing { get; set; }
+        [JsonPropertyName("line_space")]
+        public  int LineSpace { get; set; }
 
-        [JsonPropertyName("default_char")]
-        public char DefaultChar { get; set; }
+        [JsonPropertyName("ranges")]
+        public string[] CharRanges { get; set; }
+
+        [JsonPropertyName("use_hinting")]
+        public bool UseHinting { get; set; }
+
+        [JsonPropertyName("auto_hinting")]
+        public bool UseAutoHinting { get; set; }
+
+        [JsonPropertyName("hint_mode")]
+        public HintingMode HintMode;
+
+        [JsonPropertyName("kerning_mode")]
+        public KerningMode KerningMode;
+    }
+
+    public class BitmapFontAssetInfo
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("path")]
+        public string Path { get; set; }
     }
 
     public class AtlasAssetInfo

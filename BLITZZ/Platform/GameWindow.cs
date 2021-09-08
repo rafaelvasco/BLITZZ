@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using BLITZZ.Gfx;
 using BLITZZ.Logging;
@@ -19,7 +20,8 @@ namespace BLITZZ
 
         private static string _title;
         private static IntPtr _handle;
-        //private static IntPtr _graphicsContext;
+
+        public static List<Display> Displays { get; private set; }
 
         internal static IntPtr Handle => _handle;
 
@@ -31,11 +33,6 @@ namespace BLITZZ
                 SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS |
                 SDL_WindowFlags.SDL_WINDOW_MOUSE_FOCUS;
 
-            if (fullscreen)
-            {
-                windowFlags |= SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
-            }
-
             _handle = SDL_CreateWindow(
                 title,
                 SDL_WINDOWPOS_CENTERED,
@@ -45,29 +42,31 @@ namespace BLITZZ
                 windowFlags
             );
 
+            QueryDisplayList();
+
+            if (fullscreen)
+            {
+                GoFullscreen();
+            }
+
             if (_handle == IntPtr.Zero)
             {
                 throw new Exception($"Could not create Window: {SDL_GetError()}");
             }
-
         }
 
-        
 
         public static Size Size
         {
             get
             {
+                if (IsFullScreen)
+                {
+                    return new Size(CurrentDisplay.Bounds.Width, CurrentDisplay.Bounds.Height);
+                }
+
                 SDL_GetWindowSize(_handle, out var w, out var h);
                 return new Size(w, h);
-            }
-
-            set
-            {
-                value.Clamp(MinWidth, CurrentDisplay.Bounds.Width, MinHeight, CurrentDisplay.Bounds.Height);
-
-                SDL_SetWindowSize(_handle, value.Width, value.Height);
-                GameWindowResized(value);
             }
         }
 
@@ -80,20 +79,14 @@ namespace BLITZZ
                 return new Vector2(x, y);
             }
 
-            set
-            {
-                SDL_SetWindowPosition(_handle, (int)value.X, (int)value.Y);
-            }
+            set => SDL_SetWindowPosition(_handle, (int)value.X, (int)value.Y);
         }
 
         public static Vector2 Center => new Vector2(Size.Width, Size.Height) / 2;
 
         public static string Title
         {
-            get
-            {
-                return _title;
-            }
+            get => _title;
             set
             {
                 _title = value;
@@ -246,8 +239,7 @@ namespace BLITZZ
             {
                 var flags = (SDL_WindowFlags)SDL_GetWindowFlags(_handle);
 
-                return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_FULLSCREEN)
-                       || flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP);
+                return flags.HasFlag(SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP);
             }
         }
 
@@ -269,7 +261,7 @@ namespace BLITZZ
                     return Display.Invalid;
                 }
 
-                return Graphics.Displays[index];
+                return Displays[index];
             }
         }
 
@@ -291,33 +283,43 @@ namespace BLITZZ
             Position = new Vector2(bounds.X1 + targetX, bounds.Y1 + targetY);
         }
 
-        public static void GoFullscreen(bool exclusive = false)
+        public static void SetWindowSize(int multiplier)
         {
-            var flag = (uint)SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
-
-            if (exclusive)
+            if (IsFullScreen)
             {
-                flag = (uint)SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
+                SDL_SetWindowFullscreen(_handle, 0);
             }
 
-            SDL_SetWindowFullscreen(_handle, flag);
+            if (multiplier > 1)
+            {
+                multiplier = (int) Calc.Snap(multiplier, 2.0f);
+            }
 
-            Size = new Size(
-                CurrentDisplay.DesktopMode.Width,
-                CurrentDisplay.DesktopMode.Height
+            var size = new Size(
+                Blitzz.Instance.GameInfo.ResolutionWidth * multiplier, 
+                Blitzz.Instance.GameInfo.ResolutionHeight * multiplier
             );
+
+            if (Size.Width >= CurrentDisplay.Bounds.Width || Size.Height >= CurrentDisplay.Bounds.Height)
+            {
+                GoFullscreen();
+                return;
+            }
+
+            SDL_SetWindowSize(_handle, size.Width, size.Height);
+
+            CenterOnScreen();
+
+            GameWindowResized(size);
+
         }
 
-        public static void GoWindowed(Size size, bool centerOnScreen = false)
+
+        public static void GoFullscreen()
         {
-            SDL_SetWindowFullscreen(_handle, 0);
+            SDL_SetWindowFullscreen(_handle, (uint)SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP);
 
-            Size = size;
-
-            if (centerOnScreen)
-            {
-                CenterOnScreen();
-            }
+            GameWindowResized(new Size(CurrentDisplay.Bounds.Width, CurrentDisplay.Bounds.Height));
         }
 
         //public void SetIcon(Texture texture)
@@ -336,9 +338,8 @@ namespace BLITZZ
         //    );
         //}
 
-        public static void Terminate()
+        public static void Destroy()
         {
-            //SDL_GL_DeleteContext(_graphicsContext);
             SDL_DestroyWindow(_handle);
         }
 
@@ -348,19 +349,35 @@ namespace BLITZZ
 
             SDL_GetWindowWMInfo(_handle, ref info);
 
-            switch (GamePlatform.RunningPlatform)
+            return GamePlatform.RunningPlatform switch
             {
-                case PlatformName.Windows:
-                    return info.info.win.window;
+                PlatformName.Windows => info.info.win.window,
+                PlatformName.Linux => info.info.x11.window,
+                PlatformName.Mac => info.info.cocoa.window,
+                _ => throw new Exception("Unsupported OS, could not retrive native window handle.")
+            };
+        }
 
-                case PlatformName.Linux:
-                    return info.info.x11.window;
+        private static void QueryDisplayList()
+        {
+            var count = SDL_GetNumVideoDisplays();
 
-                case PlatformName.Mac:
-                    return info.info.cocoa.window;
+            Displays = new List<Display>(count);
+
+            for (int i = 0; i < count; ++i)
+            {
+                if (SDL_GetCurrentDisplayMode(i, out _) == 0)
+                {
+                    Displays.Add(new Display(i));
+                }
+                else
+                {
+                    _log.Error($"Failed to retrieve display {i} info: {SDL_GetError()}");
+                }
             }
 
-            throw new Exception("Unsupported OS, could not retrive native window handle.");
+            foreach (var d in Displays)
+                _log.Info($"  Display {d.Index} ({d.Name}) [{d.Bounds.Width}x{d.Bounds.Height}], mode {d.DesktopMode}");
         }
     }
 

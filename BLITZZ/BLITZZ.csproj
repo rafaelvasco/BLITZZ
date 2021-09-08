@@ -1,60 +1,64 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>SDL2.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2_nmix.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>SDL2_nmix.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2_sound.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>SDL2_sound.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\bgfx.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>BGFX.dll</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\freetype.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>freetype.dll</TargetPath>
-    </ContentWithTargetPath>
-  </ItemGroup>
-  
-  <ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libSDL2.so</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2_nmix.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libSDL2_nmix.so</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2_sound.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libSDL2_sound.so</TargetPath>
-    </ContentWithTargetPath>
-    <ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libfreetype.so">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <TargetPath>libfreetype.so</TargetPath>
-    </ContentWithTargetPath>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="MessagePack" Version="2.2.85" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <None Update="Content\BaseAssets\base.pak">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>SDL2.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2_nmix.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>SDL2_nmix.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\SDL2_sound.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>SDL2_sound.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\bgfx.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>BGFX.dll</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\windows_64\freetype.dll">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>freetype.dll</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' ">
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2.so">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>libSDL2.so</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2_nmix.so">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>libSDL2_nmix.so</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libSDL2_sound.so">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>libSDL2_sound.so</TargetPath>
+		</ContentWithTargetPath>
+		<ContentWithTargetPath Include="$(MSBuildThisFileDirectory)\Native\Binaries\linux_64\libfreetype.so">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<TargetPath>libfreetype.so</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Content\BaseAssets\base.pak" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Content\BaseAssets\base.pak" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="ImGui.NET" Version="1.78.0" />
+		<PackageReference Include="MessagePack" Version="2.2.85" />
+	</ItemGroup>
+
 
 </Project>

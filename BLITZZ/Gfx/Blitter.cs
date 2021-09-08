@@ -1,8 +1,8 @@
 ﻿using BLITZZ.Content;
 using System;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BLITZZ.Content.Font;
 
 namespace BLITZZ.Gfx
 {
@@ -14,7 +14,7 @@ namespace BLITZZ.Gfx
         private static readonly byte[][] AuxBuffers = new byte[AuxBufferStackSize][];
         private static Texture _textureTarget;
         private static bool _blitterDirty;
-        private static int _auxBuffersIdx = 0;
+        private static int _auxBuffersIdx;
         private static int _surfaceW;
         private static int _surfaceH;
         private static bool _ready;
@@ -23,13 +23,13 @@ namespace BLITZZ.Gfx
 
         internal static void GetDefaultAssets()
         {
-            DefaultFont = Assets.Get<TextureFont>("default_font");
+            DefaultFont = Assets.Get<TrueTypeFont>("tiny");
             CurrentFont = DefaultFont;
         }
 
-        public static TextureFont DefaultFont { get; private set; }
+        public static Font DefaultFont { get; private set; }
 
-        public static TextureFont CurrentFont { get; private set; }
+        public static Font CurrentFont { get; private set; }
 
         public static void Begin(byte[] pixelsArray, int w, int h)
         {
@@ -646,7 +646,7 @@ namespace BLITZZ.Gfx
             _blitterDirty = true;
         }
 
-        public static void SetFont(TextureFont font)
+        public static void SetFont(Font font)
         {
             CurrentFont = font ?? DefaultFont;
         }
@@ -808,77 +808,38 @@ namespace BLITZZ.Gfx
 
         public static void DrawText(int x, int y, string text, float scale = 1.0f)
         {
-            if (!_ready)
-            {
-                return;
-            }
+            //if (!_ready)
+            //{
+            //    return;
+            //}
 
-            _blitterDirty = true;
+            //_blitterDirty = true;
 
-            var font = CurrentFont;
+            //var font = CurrentFont;
 
-            var offset = Vector2.Zero;
-            var firstGlyphOfLine = true;
+            //var offset = Vector2.Zero;
+            //var firstGlyphOfLine = true;
 
-            var fontPixmap = font.Texture.Pixmap;
+            //var fontPixmap = font.Texture.Pixmap;
 
-            fixed (TextureFont.Glyph* pGlyphs = font.Glyphs)
-            {
-                for (int i = 0; i < text.Length; ++i)
-                {
-                    var ch = text[i];
+            //for (int i = 0; i < text.Length; ++i)
+            //{
+            //    var ch = text[i];
 
-                    switch (ch)
-                    {
-                        case '\r':
-                            continue;
+            //    switch (ch)
+            //    {
+            //        case '\r':
+            //            continue;
 
-                        case '\n':
-                            offset.X = 0;
-                            offset.Y = font.LineSpacing;
-                            firstGlyphOfLine = true;
-                            continue;
-                    }
+            //        case '\n':
+            //            offset.X = 0;
+            //            offset.Y = font.LineSpacing;
+            //            firstGlyphOfLine = true;
+            //            continue;
+            //    }
 
-                    var currentGlyphIndex = font.GetGlyphIndexOrDefault(ch);
-
-                    var pCurrentGlyph = pGlyphs + currentGlyphIndex;
-
-                    if (firstGlyphOfLine)
-                    {
-                        offset.X = Calc.Max(pCurrentGlyph->LeftSideBearing, 0);
-                        firstGlyphOfLine = false;
-                    }
-                    else
-                    {
-                        offset.X += font.Spacing + pCurrentGlyph->LeftSideBearing;
-                    }
-
-                    var p = offset;
-
-                    Transform transform = Transform.Identity;
-
-                    transform.M11 = scale;
-                    transform.M22 = scale;
-                    transform.M41 = x;
-                    transform.M42 = y;
-
-                    p.X += pCurrentGlyph->Cropping.X1;
-                    p.Y += pCurrentGlyph->Cropping.Y1;
-
-                    Transform.TransformPoint(ref p, ref transform, out p);
-
-                    if (!pCurrentGlyph->TextureRect.IsEmpty)
-                    {
-                        Blit(fontPixmap, (int)p.X, (int)p.Y, pCurrentGlyph->TextureRect, (int)(pCurrentGlyph->TextureRect.Width * scale), (int)(pCurrentGlyph->TextureRect.Height * scale));
-                    }
-
-                    offset.X += pCurrentGlyph->Width + pCurrentGlyph->RightSideBearing;
-                }
-            }
-
-
-
+                
+            //}
         }
 
         // ==========================================================

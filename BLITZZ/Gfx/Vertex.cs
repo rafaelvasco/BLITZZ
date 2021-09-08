@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace BLITZZ.Gfx
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    internal struct Vertex
+    internal struct Vertex 
     {
         public float X;
 
@@ -17,7 +17,6 @@ namespace BLITZZ.Gfx
         public float Tx;
 
         public float Ty;
-
 
         public static readonly VertexLayout VertexLayout;
 
@@ -35,11 +34,11 @@ namespace BLITZZ.Gfx
         {
             VertexLayout = new VertexLayout();
 
-            Bgfx.VertexLayoutBegin(VertexLayout, Graphics.Renderer);
-            Bgfx.VertexLayoutAdd(VertexLayout, Attrib.Position, AttribType.Float, 3, false, false);
-            Bgfx.VertexLayoutAdd(VertexLayout, Attrib.Color0, AttribType.Uint8, 4, true, false);
-            Bgfx.VertexLayoutAdd(VertexLayout, Attrib.TexCoord0, AttribType.Float, 2, false, false);
-            Bgfx.VertexLayoutEnd(VertexLayout);
+            VertexLayout.Begin();
+            VertexLayout.Add(Attrib.Position, 3, AttribType.Float);
+            VertexLayout.Add(Attrib.Color0, 4, AttribType.Uint8, normalized: true);
+            VertexLayout.Add(Attrib.TexCoord0, 2, AttribType.Float);
+            VertexLayout.End();
         }
 
         public override string ToString()
@@ -47,7 +46,8 @@ namespace BLITZZ.Gfx
             return $"{X},{Y},{Z},{Col},{Tx},{Ty}";
         }
 
-        public static int Stride => 24;
+        public static int Stride => VertexLayout.Stride;
 
+       
     }
 }

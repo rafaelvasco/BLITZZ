@@ -11,7 +11,7 @@ namespace BLITZZ.Input
         public static event Action<MouseMoveEventArgs> MouseMoved;
         public static event Action<MouseWheelEventArgs> MouseWheel;
 
-        private static MouseMoveEventArgs _mouseMoveArgs = new(Vector2.Zero, Vector2.Zero, default);
+        private static readonly MouseMoveEventArgs _mouseMoveArgs = new(Vector2.Zero, Vector2.Zero, default);
 
         public static bool IsRelativeModeEnabled
         {

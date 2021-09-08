@@ -40,7 +40,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_rendererType">Renderer backend type. See: `bgfx::RendererType`</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_begin", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe VertexLayout* vertex_layout_begin(VertexLayout* _this, RendererType _rendererType);
+		public static extern unsafe VertexLayoutData* vertex_layout_begin(VertexLayoutData* _this, RendererType _rendererType);
 
 		/// <summary>
 		/// Add attribute to VertexLayout.
@@ -54,7 +54,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_asInt">Packaging rule for vertexPack, vertexUnpack, and vertexConvert for AttribType::Uint8 and AttribType::Int16. Unpacking code must be implemented inside vertex shader.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_add", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe VertexLayout* vertex_layout_add(VertexLayout* _this, Attrib _attrib, byte _num, AttribType _type, bool _normalized, bool _asInt);
+		public static extern unsafe VertexLayoutData* vertex_layout_add(VertexLayoutData* _this, Attrib _attrib, byte _num, AttribType _type, bool _normalized, bool _asInt);
 
 		/// <summary>
 		/// Decode attribute.
@@ -67,7 +67,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_asInt">Attribute is packed as int.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_decode", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void vertex_layout_decode(VertexLayout* _this, Attrib _attrib, byte* _num, AttribType* _type, bool* _normalized, bool* _asInt);
+		public static extern unsafe void vertex_layout_decode(VertexLayoutData* _this, Attrib _attrib, byte* _num, AttribType* _type, bool* _normalized, bool* _asInt);
 
 		/// <summary>
 		/// Returns `true` if VertexLayout contains attribute.
@@ -77,7 +77,7 @@ namespace BLITZZ.Native.BGFX
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_has", CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern unsafe bool vertex_layout_has(VertexLayout* _this, Attrib _attrib);
+		public static extern unsafe bool vertex_layout_has(VertexLayoutData* _this, Attrib _attrib);
 
 		/// <summary>
 		/// Skip `_num` bytes in vertex stream.
@@ -86,14 +86,14 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_num">Number of bytes to skip.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_skip", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe VertexLayout* vertex_layout_skip(VertexLayout* _this, byte _num);
+		public static extern unsafe VertexLayoutData* vertex_layout_skip(VertexLayoutData* _this, byte _num);
 
 		/// <summary>
 		/// End VertexLayout.
 		/// </summary>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_layout_end", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void vertex_layout_end(VertexLayout* _this);
+		public static extern unsafe void vertex_layout_end(VertexLayoutData* _this);
 
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace BLITZZ.Native.BGFX
         /// <param name="_index">Vertex index that will be modified.</param>
         ///
         [DllImport(DllName, EntryPoint = "bgfx_vertex_pack", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void vertex_pack(float _input, bool _inputNormalized, Attrib _attr, VertexLayout* _layout, void* _data, uint _index);
+		public static extern unsafe void vertex_pack(float _input, bool _inputNormalized, Attrib _attr, VertexLayoutData* _layout, void* _data, uint _index);
 
 		/// <summary>
 		/// Unpack vertex attribute from vertex stream format.
@@ -121,7 +121,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_index">Vertex index that will be unpacked.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_unpack", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void vertex_unpack(float _output, Attrib _attr, VertexLayout* _layout, void* _data, uint _index);
+		public static extern unsafe void vertex_unpack(float _output, Attrib _attr, VertexLayoutData* _layout, void* _data, uint _index);
 
 		/// <summary>
 		/// Converts vertex stream data from one vertex stream format to another.
@@ -134,7 +134,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_num">Number of vertices to convert from source to destination.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_vertex_convert", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void vertex_convert(VertexLayout* _dstLayout, void* _dstData, VertexLayout* _srcLayout, void* _srcData, uint _num);
+		public static extern unsafe void vertex_convert(VertexLayoutData* _dstLayout, void* _dstData, VertexLayoutData* _srcLayout, void* _srcData, uint _num);
 
 		/// <summary>
 		/// Weld vertices.
@@ -148,7 +148,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_epsilon">Error tolerance for vertex position comparison.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_weld_vertices", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe uint weld_vertices(void* _output, VertexLayout* _layout, void* _data, uint _num, bool _index32, float _epsilon);
+		public static extern unsafe uint weld_vertices(void* _output, VertexLayoutData* _layout, void* _data, uint _num, bool _index32, float _epsilon);
 
 		/// <summary>
 		/// Convert index buffer for use with different primitive topologies.
@@ -420,7 +420,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_layout">Vertex layout.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_create_vertex_layout", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe VertexLayoutHandle create_vertex_layout(VertexLayout* _layout);
+		public static extern unsafe VertexLayoutHandle create_vertex_layout(VertexLayoutData* _layout);
 
 		/// <summary>
 		/// Destroy vertex layout.
@@ -440,7 +440,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_flags">Buffer creation flags.  - `BGFX_BUFFER_NONE` - No flags.  - `BGFX_BUFFER_COMPUTE_READ` - Buffer will be read from by compute shader.  - `BGFX_BUFFER_COMPUTE_WRITE` - Buffer will be written into by compute shader. When buffer      is created with `BGFX_BUFFER_COMPUTE_WRITE` flag it cannot be updated from CPU.  - `BGFX_BUFFER_COMPUTE_READ_WRITE` - Buffer will be used for read/write by compute shader.  - `BGFX_BUFFER_ALLOW_RESIZE` - Buffer will resize on buffer update if a different amount of      data is passed. If this flag is not specified, and more data is passed on update, the buffer      will be trimmed to fit the existing buffer size. This flag has effect only on dynamic buffers.  - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on index buffers.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_create_vertex_buffer", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe VertexBufferHandle create_vertex_buffer(Memory* _mem, VertexLayout* _layout, ushort _flags);
+		public static extern unsafe VertexBufferHandle create_vertex_buffer(Memory* _mem, VertexLayoutData* _layout, ushort _flags);
 
 		/// <summary>
 		/// Set static vertex buffer debug name.
@@ -511,7 +511,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_flags">Buffer creation flags.   - `BGFX_BUFFER_NONE` - No flags.   - `BGFX_BUFFER_COMPUTE_READ` - Buffer will be read from by compute shader.   - `BGFX_BUFFER_COMPUTE_WRITE` - Buffer will be written into by compute shader. When buffer       is created with `BGFX_BUFFER_COMPUTE_WRITE` flag it cannot be updated from CPU.   - `BGFX_BUFFER_COMPUTE_READ_WRITE` - Buffer will be used for read/write by compute shader.   - `BGFX_BUFFER_ALLOW_RESIZE` - Buffer will resize on buffer update if a different amount of       data is passed. If this flag is not specified, and more data is passed on update, the buffer       will be trimmed to fit the existing buffer size. This flag has effect only on dynamic       buffers.   - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on       index buffers.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_create_dynamic_vertex_buffer", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe DynamicVertexBufferHandle create_dynamic_vertex_buffer(uint _num, VertexLayout* _layout, ushort _flags);
+		public static extern unsafe DynamicVertexBufferHandle create_dynamic_vertex_buffer(uint _num, VertexLayoutData* _layout, ushort _flags);
 
 		/// <summary>
 		/// Create dynamic vertex buffer and initialize it.
@@ -522,7 +522,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_flags">Buffer creation flags.   - `BGFX_BUFFER_NONE` - No flags.   - `BGFX_BUFFER_COMPUTE_READ` - Buffer will be read from by compute shader.   - `BGFX_BUFFER_COMPUTE_WRITE` - Buffer will be written into by compute shader. When buffer       is created with `BGFX_BUFFER_COMPUTE_WRITE` flag it cannot be updated from CPU.   - `BGFX_BUFFER_COMPUTE_READ_WRITE` - Buffer will be used for read/write by compute shader.   - `BGFX_BUFFER_ALLOW_RESIZE` - Buffer will resize on buffer update if a different amount of       data is passed. If this flag is not specified, and more data is passed on update, the buffer       will be trimmed to fit the existing buffer size. This flag has effect only on dynamic       buffers.   - `BGFX_BUFFER_INDEX32` - Buffer is using 32-bit indices. This flag has effect only on       index buffers.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_create_dynamic_vertex_buffer_mem", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe DynamicVertexBufferHandle create_dynamic_vertex_buffer_mem(Memory* _mem, VertexLayout* _layout, ushort _flags);
+		public static extern unsafe DynamicVertexBufferHandle create_dynamic_vertex_buffer_mem(Memory* _mem, VertexLayoutData* _layout, ushort _flags);
 
 		/// <summary>
 		/// Update dynamic vertex buffer.
@@ -562,7 +562,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_layout">Vertex layout.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_get_avail_transient_vertex_buffer", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe uint get_avail_transient_vertex_buffer(uint _num, VertexLayout* _layout);
+		public static extern unsafe uint get_avail_transient_vertex_buffer(uint _num, VertexLayoutData* _layout);
 
 		/// <summary>
 		/// Returns number of requested or maximum available instance buffer slots.
@@ -594,7 +594,7 @@ namespace BLITZZ.Native.BGFX
 		/// <param name="_layout">Vertex layout.</param>
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_alloc_transient_vertex_buffer", CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe void alloc_transient_vertex_buffer(TransientVertexBuffer* _tvb, uint _num, VertexLayout* _layout);
+		public static extern unsafe void alloc_transient_vertex_buffer(TransientVertexBuffer* _tvb, uint _num, VertexLayoutData* _layout);
 
 		/// <summary>
 		/// Check for required space and allocate transient vertex and index
@@ -611,7 +611,7 @@ namespace BLITZZ.Native.BGFX
 		///
 		[DllImport(DllName, EntryPoint = "bgfx_alloc_transient_buffers", CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public static extern unsafe bool alloc_transient_buffers(TransientVertexBuffer* _tvb, VertexLayout* _layout, uint _numVertices, TransientIndexBuffer* _tib, uint _numIndices, bool _index32);
+		public static extern unsafe bool alloc_transient_buffers(TransientVertexBuffer* _tvb, VertexLayoutData* _layout, uint _numVertices, TransientIndexBuffer* _tib, uint _numIndices, bool _index32);
 
 		/// <summary>
 		/// Allocate instance data buffer.

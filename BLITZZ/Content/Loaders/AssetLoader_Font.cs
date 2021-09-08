@@ -16,5 +16,17 @@ namespace BLITZZ.Content
 
             return font;
         }
+
+        public static BitmapFont LoadBitmapFont(BitmapFontData fontData)
+        {
+            var texture = LoadTexture(fontData.FontSheet);
+
+            var font = new BitmapFont(texture, fontData)
+            {
+                Id = fontData.Id
+            };
+
+            return font;
+        }
     }
 }

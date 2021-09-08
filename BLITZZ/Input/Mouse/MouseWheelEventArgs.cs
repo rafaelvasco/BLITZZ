@@ -3,7 +3,7 @@ using static BLITZZ.Native.SDL.SDL2;
 
 namespace BLITZZ.Input
 {
-    public struct MouseWheelEventArgs
+    public readonly struct MouseWheelEventArgs
     {
         public Vector2 Motion { get; }
         public bool DirectionFlipped { get; }

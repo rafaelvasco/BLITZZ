@@ -1,6 +1,6 @@
-﻿using BLITZZ.Gfx;
-using BLITZZ.Native.BGFX;
+﻿using BLITZZ.Native.BGFX;
 using System;
+using System.Threading;
 
 namespace BLITZZ.Content
 {
@@ -26,11 +26,14 @@ namespace BLITZZ.Content
         private TextureWrappingMode _horizontalWrapMode;
         private TextureWrappingMode _verticalWrapMode;
         private TextureFilterMode _filterMode;
-        
 
-        public int Width { get; private set; }
+        private static int _lastSortingKey;
 
-        public int Height { get; private set; }
+        public int Width { get; }
+
+        public int Height { get; }
+
+        internal int SortingKey { get; } = Interlocked.Increment(ref _lastSortingKey);
 
         public TextureWrappingMode HorizontalWrappingMode
         {
@@ -77,7 +80,7 @@ namespace BLITZZ.Content
             Width = pixmap.Width;
             Height = pixmap.Height;
             HorizontalWrappingMode = TextureWrappingMode.Clamp;
-            VerticalWrappingMode = TextureWrappingMode.Repeat;
+            VerticalWrappingMode = TextureWrappingMode.Clamp;
             FilterMode = TextureFilterMode.NearestNeighbor;
             UpdateTextureFlags();
             Handle = Bgfx.CreateDynamicTexture2D(pixmap.Width, pixmap.Height, false, 0, TextureFormat.BGRA8, SamplerFlags, pixmap.Data);
@@ -133,11 +136,6 @@ namespace BLITZZ.Content
         {
             var samplerFlags = SamplerFlags.None;
 
-            if (texture.FilterMode == TextureFilterMode.NearestNeighbor)
-            {
-                samplerFlags |= SamplerFlags.Point;
-            }
-
             if (texture.HorizontalWrappingMode == TextureWrappingMode.Clamp)
             {
                 samplerFlags |= SamplerFlags.UClamp;
@@ -147,6 +145,13 @@ namespace BLITZZ.Content
             {
                 samplerFlags |= SamplerFlags.VClamp;
             }
+
+            if (texture.FilterMode == TextureFilterMode.NearestNeighbor)
+            {
+                samplerFlags |= SamplerFlags.Point;
+            }
+
+           
 
             return samplerFlags;
         }

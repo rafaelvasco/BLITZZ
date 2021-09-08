@@ -4,7 +4,7 @@ using static BLITZZ.Native.SDL.SDL2;
 
 namespace BLITZZ.Input
 {
-    public struct MouseButtonEventArgs
+    public readonly struct MouseButtonEventArgs
     {
         public Vector2 Position { get; }
         public MouseButton Button { get; }

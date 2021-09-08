@@ -3,5 +3,5 @@
   "width": 800,
   "height": 600,
   "start_fullscreen": false,
-  "resources_folder": "Assets"
+  "assets_folder": "Assets"
 }

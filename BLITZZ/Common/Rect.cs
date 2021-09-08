@@ -170,7 +170,7 @@ namespace BLITZZ
 
         public static implicit operator RectF(Rect rect)
         {
-            return new RectF(rect.X1, rect.Y1, rect.X2, rect.Y2);
+            return new (rect.X1, rect.Y1, rect.X2, rect.Y2);
         }
 
         public static implicit operator Rect((int X, int Y, int Width, int Height) rectTuple)
@@ -180,7 +180,7 @@ namespace BLITZZ
 
         public static implicit operator Rect(SRect v)
         {
-            throw new NotImplementedException();
+            return FromBox(v.X, v.Y, v.W, v.H);
         }
     }
 }

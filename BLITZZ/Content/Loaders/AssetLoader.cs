@@ -7,16 +7,11 @@ namespace BLITZZ.Content
 {
     public static partial class AssetLoader
     {
-        private static string _rootPath;
+        private static string _rootFolder;
 
         public static string GetFullResourcePath(string relativeResPath)
         {
-            if (_rootPath == null)
-            {
-                return relativeResPath;
-            }
-
-            string full_path = Path.Combine(_rootPath, relativeResPath);
+            string full_path = Path.Combine(_rootFolder, relativeResPath);
 
             if (GamePlatform.RunningPlatform == PlatformName.Windows)
             {
@@ -26,9 +21,9 @@ namespace BLITZZ.Content
             return full_path;
         }
 
-        public static void SetRootPath(string path)
+        public static void SetRootFolder(string path)
         {
-            _rootPath = path;
+            _rootFolder = path;
         }
 
         /// <summary>
@@ -36,9 +31,9 @@ namespace BLITZZ.Content
         /// </summary>
         /// <param name="pak_name"></param>
         /// <returns></returns>
-        public static ResourcePak LoadPak(string pakName)
+        public static AssetPak LoadPak(string pakName)
         {
-            var path = Path.Combine(_rootPath,
+            var path = Path.Combine(_rootFolder,
                 !pakName.Contains(".pak") ? pakName + ".pak" : pakName);
 
             return AssetPakLoader.Load(path);

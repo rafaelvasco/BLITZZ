@@ -2,19 +2,22 @@
 {
     public abstract class Font : Asset
     {
-        public abstract Texture Texture { get; }
-        
-        public abstract int Height { get; }
+        protected CharRegion[] Regions { get; init; }
 
-        public abstract int LineSpacing { get; }
+        public Glyph[] Glyphs { get; protected set; }
 
-        public abstract bool IsKerningEnabled { get; set; }
+        public Texture Texture { get; protected set; }
+        public int Height { get; protected set; }
+
+        public float LineSpacing { get; protected set; }
+
+        public bool IsKerningEnabled { get; set; }
         
         public abstract Size Measure(string s);
 
-        public abstract IFontGlyph GetGlyphOrDefault(char c);
+        public abstract Glyph GetGlyphOrDefault(char c);
 
-        public abstract int GetKerning(char left, char right);
+        public abstract float GetKerning(char left, char right);
 
     }
 }

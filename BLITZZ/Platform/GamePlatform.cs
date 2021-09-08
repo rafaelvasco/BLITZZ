@@ -66,7 +66,7 @@ namespace BLITZZ
                SDL_EventType.SDL_TEXTEDITING
            );
 
-            PlatformEvents.On(SDL_EventType.SDL_QUIT, (SDL_Event ev) => { OnQuit(); });
+            PlatformEvents.On(SDL_EventType.SDL_QUIT, _ => { OnQuit(); });
 
             PlatformEvents.On(SDL_EventType.SDL_MOUSEBUTTONDOWN, Mouse.ProcessMouseButtonEvent);
             PlatformEvents.On(SDL_EventType.SDL_MOUSEBUTTONUP, Mouse.ProcessMouseButtonEvent);

@@ -227,7 +227,7 @@ namespace BLITZZ.Native.BGFX
 		public EncoderStats* encoderStats;
 	}
 
-	internal unsafe struct VertexLayout
+	internal unsafe struct VertexLayoutData
 	{
 		public uint hash;
 		public ushort stride;

@@ -30,6 +30,7 @@ namespace BLITZZ.Logging
         public void Dispose()
         {
             StreamWriter.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

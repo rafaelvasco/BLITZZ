@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using BLITZZ.Content.Font;
 
 namespace BLITZZ_CLI
 {
@@ -42,9 +43,9 @@ namespace BLITZZ_CLI
                 {
                     Console.WriteLine($"Building a total of {totalAssets} asssets into {manifest.Assets.Count} asset paks:");
 
-                    AssetLoader.SetRootPath(assetsFolder);
+                    AssetLoader.SetRootFolder(assetsFolder);
 
-                    List<ResourcePak> resource_paks =
+                    List<AssetPak> resource_paks =
                         BuildAssets(manifest);
 
                     foreach (var pak in resource_paks)
@@ -63,7 +64,6 @@ namespace BLITZZ_CLI
                 catch (Exception e)
                 {
                     Console.WriteLine($"An error occurred while building game assets: {e.Message}");
-                    
                 }
                 
             });
@@ -86,129 +86,153 @@ namespace BLITZZ_CLI
 
         //}
 
-        private static List<ResourcePak> BuildAssets(AssetsManifest manifest)
+        private static List<AssetPak> BuildAssets(AssetsManifest manifest)
         {
             var resource_groups = manifest.Assets;
 
-            var results = new List<ResourcePak>();
+            var results = new List<AssetPak>();
 
             foreach (var (groupKey, group) in resource_groups)
             {
-                var pak = new ResourcePak(groupKey);
+                var pak = new AssetPak(groupKey);
 
                 Console.WriteLine($"Creating Asset Pak: {pak.Name}");
 
                 if (group.Images != null)
                 {
-                    pak.Images = new Dictionary<string, ImageData>();
-
                     foreach (var imageAssetInfo in group.Images)
                     {
+                        Console.WriteLine($"Building Image: {imageAssetInfo.Id}");
+
                         var pixmap_data = ImageBuilder.Build(imageAssetInfo.Id, imageAssetInfo.Path);
 
                         pak.Images.Add(imageAssetInfo.Id, pixmap_data);
 
                         pak.TotalResourcesCount++;
 
-                        Console.WriteLine($"Added Image: {pixmap_data.Id}");
+                        Console.WriteLine("Done.");
                     }
                 }
 
                 if (group.Shaders != null)
                 {
-                    pak.Shaders = new Dictionary<string, ShaderProgramData>();
-
                     foreach (var shaderAssetInfo in group.Shaders)
                     {
+                        Console.WriteLine($"Building Shader: {shaderAssetInfo.Id}");
+
                         var shader_data = ShaderBuilder.Build(shaderAssetInfo.Id, shaderAssetInfo.VsPath, shaderAssetInfo.FsPath);
 
                         pak.Shaders.Add(shaderAssetInfo.Id, shader_data);
 
                         pak.TotalResourcesCount++;
 
-                        Console.WriteLine($"Added Shader: {shader_data.Id}");
+                        Console.WriteLine("Done.");
                     }
                 }
 
                 if (group.Fonts != null)
                 {
-                    //foreach (var font_info in group.Fonts)
-                    //{
-                    //    var build_params = new FontBuildParams()
-                    //    {
-                    //        Id = font_info.Id,
-                    //        LineSpacing = font_info.LineSpacing,
-                    //        Spacing = font_info.Spacing,
-                    //        DefaultChar = font_info.DefaultChar,
-                    //        Faces = font_info.Faces.Select(f => new FontFace()
-                    //        {
-                    //            CharRanges = f.CharRanges.Select(CharRange.GetFromKey).ToList(),
-                    //            Path = f.Path,
-                    //            Size = f.Size,
-                    //        }).ToList()
-                    //    };
+                    foreach (var fontAssetInfo in group.Fonts)
+                    {
+                        Console.WriteLine($"Building Font: {fontAssetInfo.Id}");
 
-                    //    var font_data = FontBuilder.Build(build_params);
+                        var buildProps = new FontBuildProps()
+                        {
+                            Size = fontAssetInfo.Size,
+                            UseHinting = fontAssetInfo.UseHinting,
+                            UseAutoHinting = fontAssetInfo.UseAutoHinting,
+                            KerningMode = fontAssetInfo.KerningMode,
+                            HintMode = fontAssetInfo.HintMode,
+                            LineSpace = fontAssetInfo.LineSpace
+                        };
 
-                    //    pak.Fonts.Add(font_info.Id, font_data);
+                        if (fontAssetInfo.CharRanges is {Length: > 0})
+                        {
+                            buildProps.CharRanges = new CharRange[fontAssetInfo.CharRanges.Length];
 
-                    //    pak.TotalResourcesCount++;
+                            for (int i = 0; i < fontAssetInfo.CharRanges.Length; ++i)
+                            {
+                                buildProps.CharRanges[i] = CharRange.GetFromKey(fontAssetInfo.CharRanges[i]);
+                            }
+                        }
 
-                    //    Console.WriteLine($"Added Font: {font_data.Id}");
+                        var fontData = TrueTypeFontBuilder.Build(fontAssetInfo.Id, fontAssetInfo.Path, buildProps);
 
-                    //}
+                        pak.Fonts.Add(fontAssetInfo.Id, fontData);
+
+                        pak.TotalResourcesCount++;
+
+                        Console.WriteLine("Done.");
+                    }
+
+                }
+
+                if (group.BitmapFonts != null)
+                {
+                    foreach (var bitmapFontAssetInfo in group.BitmapFonts)
+                    {
+                        Console.WriteLine($"Building BitmapFont: {bitmapFontAssetInfo.Id}");
+
+                        var bitmapFontData = BitmapFontBuilder.Build(bitmapFontAssetInfo.Id, bitmapFontAssetInfo.Path);
+
+                        pak.BitmapFonts.Add(bitmapFontAssetInfo.Id, bitmapFontData);
+
+                        pak.TotalResourcesCount++;
+
+                        Console.WriteLine("Done.");
+                    }
                 }
 
                 if (group.Atlases != null)
                 {
-                    pak.Atlases = new Dictionary<string, TextureAtlasData>();
-
                     foreach (var atlasAssetInfo in group.Atlases)
                     {
+                        Console.WriteLine($"Building Atlas: {atlasAssetInfo.Id}");
+
                         var atlas_data = AtlasBuilder.Build(atlasAssetInfo.Id, atlasAssetInfo.Path, atlasAssetInfo.Regions);
 
                         pak.Atlases.Add(atlas_data.Id, atlas_data);
 
                         pak.TotalResourcesCount++;
 
-                        Console.WriteLine($"Added Atlas: {atlas_data.Id}");
+                        Console.WriteLine("Done.");
                     }
                 }
 
                 if (group.TextFiles != null)
                 {
-                    pak.TextFiles = new Dictionary<string, TextFileData>();
-
                     foreach (var textFileAssetInfo in group.TextFiles)
                     {
+                        Console.WriteLine($"Building TextFile: {textFileAssetInfo.Id}");
+
                         var textFileData = TextBuilder.Build(textFileAssetInfo.Id, textFileAssetInfo.Path);
                         pak.TextFiles.Add(textFileAssetInfo.Id, textFileData);
 
                         pak.TotalResourcesCount++;
 
-                        Console.WriteLine($"Added TextFile: {textFileData.Id}");
+                        Console.WriteLine("Done.");
                     }
                 }
 
                 if (group.AudioFiles != null)
                 {
-                    pak.AudioFiles = new Dictionary<string, AudioFileData>();
-
                     foreach (var audioFileAssetInfo in group.AudioFiles)
                     {
+                        Console.WriteLine($"Building Audio File: {audioFileAssetInfo.Id}");
+
                         var audioFileData = AudioFileBuilder.Build(audioFileAssetInfo.Id, audioFileAssetInfo.Path, audioFileAssetInfo.Streamed);
 
                         pak.AudioFiles.Add(audioFileAssetInfo.Id, audioFileData);
 
                         pak.TotalResourcesCount++;
 
-                        Console.WriteLine($"Added Audio File : {audioFileData.Id}");
+                        Console.WriteLine("Done.");
                     }
                 }
 
                 results.Add(pak);
 
-                Console.WriteLine($"PAK {groupKey} with {pak.TotalResourcesCount} assets.");
+                Console.WriteLine($"PAK {groupKey} built successfully with {pak.TotalResourcesCount} assets.");
             }
 
             return results;

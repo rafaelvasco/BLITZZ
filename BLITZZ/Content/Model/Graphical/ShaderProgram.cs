@@ -96,7 +96,7 @@ namespace BLITZZ.Content
             return _parametersMap.TryGetValue(name, out var index) ? _parameters[index] : null;
         }
 
-        internal void Submit()
+        internal void ApplyTextures()
         {
             if (_textureIndex == 0)
             {
@@ -109,7 +109,10 @@ namespace BLITZZ.Content
                     Bgfx.SetTexture((byte)i, _samplers[i], _textures[i].Handle, _textures[i].SamplerFlags);
                 }
             }
+        }
 
+        internal void ApplyParameters()
+        {
             if (_parameters == null)
             {
                 return;

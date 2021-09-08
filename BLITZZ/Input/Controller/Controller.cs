@@ -27,6 +27,11 @@ namespace BLITZZ.Input
             controller.DeadZones[axis] = value;
         }
 
+        internal static void SetMappingsDB(string fileString)
+        {
+            SDL_GameControllerAddMapping(fileString);
+        }
+
         public static void SetDeadZoneAllAxes(int playerIndex, ushort value)
         {
             var controller = ControllerRegistry.Instance.GetControllerInfo(playerIndex);

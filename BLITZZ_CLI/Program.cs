@@ -8,33 +8,33 @@ using CommandLine;
 namespace BLITZZ_CLI
 {
     [Verb("build", HelpText = "Build Game")]
-    class BuildOptions
+    internal class BuildOptions
     {
         [Option(Required = true, HelpText = "Game Folder Path")]
         public string GameFolder { get; set; }
     }
 
     [Verb("build_engine", HelpText = "Build Engine")]
-    class BuildEngineOptions
+    internal class BuildEngineOptions
     {
         [Option(Required = true, HelpText = "Engine Folder Path")]
         public string Path { get; set; }
     }
 
-    class Program
+    internal class Program
     {
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             await Parser.Default.ParseArguments<BuildOptions, BuildEngineOptions>(args)
                 .MapResult(
                     
                     async (BuildOptions buildOptions) => await ExecuteBuild(buildOptions),
                     async (BuildEngineOptions buildOptions) => await ExecuteBuildEngine(buildOptions),
-                    errs => Task.FromResult(false)
+                    _ => Task.FromResult(false)
                 );
         }
 
-        static async Task ExecuteBuild(BuildOptions options)
+        private static async Task ExecuteBuild(BuildOptions options)
         {
             var gameConfigPath = Path.Combine(options.GameFolder, Assets.GameConfigJsonFileName);
 
@@ -44,25 +44,31 @@ namespace BLITZZ_CLI
                 return;
             }
 
-
-            using FileStream openStream = File.OpenRead(Path.Combine(options.GameFolder, Assets.GameConfigJsonFileName));
+            await using FileStream openStream = File.OpenRead(Path.Combine(options.GameFolder, Assets.GameConfigJsonFileName));
 
             GameInfo gameInfo = await JsonSerializer.DeserializeAsync<GameInfo>(openStream);
 
-            var assetsFolder = Path.Combine(options.GameFolder, gameInfo.AssetsFolder);
-
-            AssetsManifest assetsManifest = AssetLoader.LoadGameAssetsManifest(assetsFolder);
-
-            if (assetsManifest == null)
+            if (gameInfo != null)
             {
-                Console.WriteLine("Could not find assets manifest file. Exiting.");
-                return;
-            }
+                var assetsFolder = Path.Combine(options.GameFolder, gameInfo.AssetsFolder);
 
-            await Builder.BuildGame(assetsFolder, assetsManifest);
+                AssetsManifest assetsManifest = AssetLoader.LoadGameAssetsManifest(assetsFolder);
+
+                if (assetsManifest == null)
+                {
+                    Console.WriteLine("Could not find assets manifest file. Exiting.");
+                    return;
+                }
+
+                await Builder.BuildGame(assetsFolder, assetsManifest);
+            }
+            else
+            {
+                Console.WriteLine("Could not deserialize game info file. Exiting.");
+            }
         }
 
-        static async Task ExecuteBuildEngine(BuildEngineOptions options)
+        private static async Task ExecuteBuildEngine(BuildEngineOptions options)
         {
             var assetsFolder = Path.Combine(options.Path, "Content", "BaseAssets");
 

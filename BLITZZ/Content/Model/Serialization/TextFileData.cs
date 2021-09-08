@@ -9,6 +9,6 @@ namespace BLITZZ.Content
         public string Id {get;set;}
 
         [Key(1)]
-        public byte[][] TextData {get;set;}
+        public byte[] TextData {get;set;}
     }
 }

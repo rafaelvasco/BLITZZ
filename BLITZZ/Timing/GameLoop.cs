@@ -30,7 +30,7 @@ namespace BLITZZ
             _desiredFrametime = SDL2.SDL_GetPerformanceFrequency() / UpdateRate;
             _vsyncMaxError = SDL2.SDL_GetPerformanceFrequency() * 0.0002;
 
-            double time_60Hz = SDL2.SDL_GetPerformanceFrequency() / 60;
+            double time_60Hz = SDL2.SDL_GetPerformanceFrequency() / 60.0f;
             _snapFreqs = new[]
             {
                 time_60Hz, //60fps
@@ -133,13 +133,13 @@ namespace BLITZZ
 
                 while (_frameAccum >= _desiredFrametime)
                 {
-                    engine.FixedUpdate((float)_fixedDeltatime);
+                    engine.FixedUpdate?.Invoke((float)_fixedDeltatime);
 
                     // Cap Variable Update's dt to not be larger than fixed update, 
                     // and interleave it (so game state can always get animation frame it needs)
                     if (consumed_delta_time > _desiredFrametime)
                     {
-                        engine.Update((float)_fixedDeltatime);
+                        engine.Update?.Invoke((float)_fixedDeltatime);
 
                         consumed_delta_time -= _desiredFrametime;
                     }
@@ -147,7 +147,7 @@ namespace BLITZZ
                     _frameAccum -= _desiredFrametime;
                 }
 
-                engine.Update((float)(consumed_delta_time / perfFreq()));
+                engine.Update?.Invoke((float)(consumed_delta_time / perfFreq()));
 
                 //if (Engine.Canvas.NeedsResetDisplay)
                 //{
@@ -155,7 +155,7 @@ namespace BLITZZ
                 //    OnDisplayResize();
                 //}
 
-                //Draw(Engine.Canvas, (float)(_frameAccum / _desiredFrametime));
+                engine.Draw?.Invoke();
 
                 Graphics.Frame();
 
@@ -167,8 +167,8 @@ namespace BLITZZ
                 {
                     for (int i = 0; i < UpdateMult; ++i)
                     {
-                        engine.FixedUpdate((float)_fixedDeltatime);
-                        engine.Update((float)_fixedDeltatime);
+                        engine.FixedUpdate?.Invoke((float)_fixedDeltatime);
+                        engine.Update?.Invoke((float)_fixedDeltatime);
 
                         _frameAccum -= _desiredFrametime;
                     }
@@ -179,6 +179,8 @@ namespace BLITZZ
                 //    Engine.Canvas.HandleDisplayChange();
                 //    OnDisplayResize();
                 //}
+                
+                engine.Draw?.Invoke();
 
                 //Draw(Engine.Canvas, 1.0f);
 

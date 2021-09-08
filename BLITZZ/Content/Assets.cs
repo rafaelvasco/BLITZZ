@@ -1,13 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using BLITZZ.Content.Font;
+using BLITZZ.Logging;
 
 namespace BLITZZ.Content
 {
     public static class Assets
     {
+        private static readonly Log _log = LogManager.GetForCurrentAssembly();
+
         private static Dictionary<string, Asset> _loadedAssets;
         private static Dictionary<string, string[]> _pakMap;
         private static List<DisposableResource> _runtimeResources;
+
+        private const string EmbeddedAssetPakKey = "BLITZZ.Content.BaseAssets.base.pak";
 
         public const string GameConfigJsonFileName = "game.json";
 
@@ -15,13 +22,13 @@ namespace BLITZZ.Content
 
         internal static void Initialize(GameInfo info)
         {
-            AssetLoader.SetRootPath(info.AssetsFolder);
-
             _loadedAssets = new Dictionary<string, Asset>();
             _runtimeResources = new List<DisposableResource>();
             _pakMap = new Dictionary<string, string[]>();
 
-            LoadContentPack("base");
+            AssetLoader.SetRootFolder(info.AssetsFolder);
+
+            LoadEmbeddedAssets();
 
             if (info.PreloadPaks != null)
             {
@@ -42,10 +49,18 @@ namespace BLITZZ.Content
 
             throw new Exception($"Can't find resource with ID: {resourceId}");
         }
-        public static void LoadContentPack(string pakName)
-        {
-            ResourcePak pak = AssetLoader.LoadPak(pakName);
 
+        private static void LoadEmbeddedAssets()
+        {
+            using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(EmbeddedAssetPakKey);
+
+            var basePak = AssetPakLoader.Load(stream);
+
+            ProcessAssetPak(basePak);
+        }
+
+        private static void ProcessAssetPak(AssetPak pak)
+        {
             if (pak.TotalResourcesCount == 0)
             {
                 return;
@@ -53,7 +68,7 @@ namespace BLITZZ.Content
 
             int res_name_map_idx = 0;
 
-            _pakMap.Add(pakName, new string[pak.TotalResourcesCount]);
+            _pakMap.Add(pak.Name, new string[pak.TotalResourcesCount]);
 
             if (pak.Images != null)
             {
@@ -61,7 +76,7 @@ namespace BLITZZ.Content
                 {
                     Texture texture = AssetLoader.LoadTexture(imageData);
                     _loadedAssets.Add(texture.Id, texture);
-                    _pakMap[pakName][res_name_map_idx++] = imageKey;
+                    _pakMap[pak.Name][res_name_map_idx++] = imageKey;
                 }
             }
 
@@ -71,7 +86,7 @@ namespace BLITZZ.Content
                 {
                     TextureAtlas atlas = AssetLoader.LoadAtlas(atlasData);
                     _loadedAssets.Add(atlas.Id, atlas);
-                    _pakMap[pakName][res_name_map_idx++] = atlasKey;
+                    _pakMap[pak.Name][res_name_map_idx++] = atlasKey;
                 }
             }
 
@@ -79,9 +94,19 @@ namespace BLITZZ.Content
             {
                 foreach (var (fontKey, fontData) in pak.Fonts)
                 {
-                    TextureFont font = AssetLoader.LoadFont(fontData);
+                    TrueTypeFont font = AssetLoader.LoadTrueTypeFont(fontData);
                     _loadedAssets.Add(font.Id, font);
-                    _pakMap[pakName][res_name_map_idx++] = fontKey;
+                    _pakMap[pak.Name][res_name_map_idx++] = fontKey;
+                }
+            }
+
+            if (pak.BitmapFonts != null)
+            {
+                foreach (var (fontKey, fontData) in pak.BitmapFonts)
+                {
+                    BitmapFont font = AssetLoader.LoadBitmapFont(fontData);
+                    _loadedAssets.Add(font.Id, font);
+                    _pakMap[pak.Name][res_name_map_idx++] = fontKey;
                 }
             }
 
@@ -91,7 +116,7 @@ namespace BLITZZ.Content
                 {
                     ShaderProgram shader = AssetLoader.LoadShader(shaderProgramData);
                     _loadedAssets.Add(shader.Id, shader);
-                    _pakMap[pakName][res_name_map_idx++] = shaderKey;
+                    _pakMap[pak.Name][res_name_map_idx++] = shaderKey;
                 }
             }
 
@@ -101,7 +126,7 @@ namespace BLITZZ.Content
                 {
                     TextFile text_file = AssetLoader.LoadTextFile(textFileData);
                     _loadedAssets.Add(text_file.Id, text_file);
-                    _pakMap[pakName][res_name_map_idx++] = txtKey;
+                    _pakMap[pak.Name][res_name_map_idx++] = txtKey;
                 }
             }
 
@@ -118,7 +143,13 @@ namespace BLITZZ.Content
 
             //    _loaded_resources.Add(song.Id, song);
             //}
+        }
 
+        public static void LoadContentPack(string pakName)
+        {
+            AssetPak pak = AssetLoader.LoadPak(pakName);
+
+            ProcessAssetPak(pak);
         }
 
         internal static void RegisterRuntimeLoaded(DisposableResource resource)
@@ -128,7 +159,7 @@ namespace BLITZZ.Content
 
         public static void FreePack(string packName)
         {
-            Console.WriteLine($" > Diposing resources from Pack: {packName}");
+            _log.Info($" > Diposing resources from Pack: {packName}");
 
             var res_ids = _pakMap[packName];
 
@@ -137,22 +168,22 @@ namespace BLITZZ.Content
                 var res_id = res_ids[i];
                 _loadedAssets[res_id].Dispose();
                 _loadedAssets.Remove(res_id);
-                Console.WriteLine($" > Disposed resource: {res_id}");
+                _log.Info(($" > Disposed resource: {res_id}"));
             }
         }
 
 
         internal static void FreeEverything()
         {
-            Console.WriteLine($" > Diposing {_loadedAssets.Count} loaded resources.");
+            _log.Info(($" > Diposing {_loadedAssets.Count} loaded resources."));
 
             foreach (var (resKey, resource) in _loadedAssets)
             {
-                Console.WriteLine($" > Diposing {resKey}.");
+                _log.Info(($" > Diposing {resKey}."));
                 resource.Dispose();
             }
 
-            Console.WriteLine($" > Disposing {_runtimeResources.Count} runtime resources.");
+            _log.Info(($" > Disposing {_runtimeResources.Count} runtime resources."));
 
             foreach (var resource in _runtimeResources)
             {

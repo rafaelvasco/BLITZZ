@@ -10,13 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Assets\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="game.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Assets\" />
   </ItemGroup>
 
 </Project>

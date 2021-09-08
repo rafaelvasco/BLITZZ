@@ -3,23 +3,26 @@ using MessagePack;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using BLITZZ.Content.Font;
 
 namespace BLITZZ.Content
 {
     internal static class AssetPakLoader
     {
-        public static ResourcePak Load(string path)
+        public static AssetPak Load(Stream stream)
         {
-            var fileBytes = File.ReadAllBytes(path);
+            using var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            var bytes = ms.ToArray();
 
-            var pakReader = new MessagePackReader(fileBytes);
+            var pakReader = new MessagePackReader(bytes);
 
             // Read Into Nested Object
             pakReader.ReadArrayHeader();
 
             var pakeName = pakReader.ReadString();
 
-            var pak = new ResourcePak(pakeName);
+            var pak = new AssetPak(pakeName);
 
             // =============================================================
             // IMAGES
@@ -49,7 +52,6 @@ namespace BLITZZ.Content
                         Data = imageData?.ToArray(),
                         Width = imageWidth,
                         Height = imageHeight
-
                     });
                 }
             }
@@ -89,7 +91,7 @@ namespace BLITZZ.Content
                         for (int j = 0; j < rectsCount; ++j)
                         {
                             var rectKey = pakReader.ReadString();
-                            
+
                             pakReader.ReadArrayHeader();
                             var rectX = pakReader.ReadInt32();
                             var rectY = pakReader.ReadInt32();
@@ -161,7 +163,6 @@ namespace BLITZZ.Content
                         Samplers = samplers,
                         Params = @params
                     });
-
                 }
             }
 
@@ -169,13 +170,13 @@ namespace BLITZZ.Content
             // FONTS
             // =============================================================
 
-            int fontsCount = pakReader.ReadMapHeader();
+            int trueTypeFontCount = pakReader.ReadMapHeader();
 
-            if (fontsCount > 0)
+            if (trueTypeFontCount > 0)
             {
                 pak.Fonts = new Dictionary<string, TrueTypeFontData>();
 
-                for (int i = 0; i < fontsCount; ++i)
+                for (int i = 0; i < trueTypeFontCount; ++i)
                 {
                     var fontKey = pakReader.ReadString();
 
@@ -183,9 +184,11 @@ namespace BLITZZ.Content
 
                     var fontId = pakReader.ReadString();
 
-                    var fontData = new TrueTypeFontData()
+                    var trueTypeFontData = new TrueTypeFontData
                     {
-                        Id = fontId
+                        Id = fontId,
+                        Size = pakReader.ReadInt32(),
+                        LineSpacing = pakReader.ReadInt32()
                     };
 
                     pakReader.ReadArrayHeader();
@@ -195,7 +198,7 @@ namespace BLITZZ.Content
                     int fontImageWidth = pakReader.ReadInt32();
                     int fontImageHeight = pakReader.ReadInt32();
 
-                    fontData.FontSheet = new ImageData()
+                    trueTypeFontData.FontSheet = new ImageData()
                     {
                         Id = fontImageDataId,
                         Width = fontImageWidth,
@@ -207,11 +210,11 @@ namespace BLITZZ.Content
 
                     if (charCount > 0)
                     {
-                        fontData.Chars = new char[charCount];
+                        trueTypeFontData.Chars = new char[charCount];
 
                         for (int j = 0; j < charCount; ++j)
                         {
-                            fontData.Chars[j] = pakReader.ReadChar();
+                            trueTypeFontData.Chars[j] = pakReader.ReadChar();
                         }
                     }
 
@@ -219,7 +222,7 @@ namespace BLITZZ.Content
 
                     if (glyphRectCount > 0)
                     {
-                        fontData.GlyphRects = new (int X, int Y, int Width, int Height)[glyphRectCount];
+                        trueTypeFontData.GlyphRegions = new SRect[glyphRectCount];
 
                         for (int k = 0; k < glyphRectCount; ++k)
                         {
@@ -230,17 +233,116 @@ namespace BLITZZ.Content
                             int w = pakReader.ReadInt32();
                             int h = pakReader.ReadInt32();
 
-                            fontData.GlyphRects[k] = (x, y, w, h);
+                            trueTypeFontData.GlyphRegions[k] = new SRect(x, y, w, h);
                         }
                     }
 
-                    int glyphCroppingsCount = pakReader.ReadArrayHeader();
+                    int glyphOffsetsCount = pakReader.ReadArrayHeader();
 
-                    if (glyphCroppingsCount > 0)
+                    if (glyphOffsetsCount > 0)
                     {
-                        fontData.GlyphCroppings = new (int X, int Y, int Width, int Height)[glyphCroppingsCount];
+                        trueTypeFontData.GlyphOffsets = new SVector2[glyphOffsetsCount];
 
-                        for (int l = 0; l < glyphCroppingsCount; ++l)
+                        for (int l = 0; l < glyphOffsetsCount; ++l)
+                        {
+                            pakReader.ReadArrayHeader();
+
+                            float x = (float) pakReader.ReadDouble();
+                            float y = (float) pakReader.ReadDouble();
+
+                            trueTypeFontData.GlyphOffsets[l] = new SVector2(x, y);
+                        }
+                    }
+
+                    int glyphXAdvancesCount = pakReader.ReadArrayHeader();
+
+                    if (glyphXAdvancesCount > 0)
+                    {
+                        trueTypeFontData.GlyphXAdvances = new float[glyphXAdvancesCount];
+
+                        for (int k = 0; k < glyphXAdvancesCount; ++k)
+                        {
+                            float xAdvance = (float) pakReader.ReadDouble();
+
+                            trueTypeFontData.GlyphXAdvances[k] = xAdvance;
+                        }
+                    }
+
+                    int kerningsCount = pakReader.ReadMapHeader();
+
+                    if (kerningsCount > 0)
+                    {
+                        trueTypeFontData.GlyphKernings = new Dictionary<int, float>();
+
+                        for (int k = 0; k < kerningsCount; ++k)
+                        {
+                            int charCode = pakReader.ReadInt32();
+
+                            float kerning = (float) pakReader.ReadDouble();
+
+                            trueTypeFontData.GlyphKernings[charCode] = kerning;
+                        }
+                    }
+
+                    pak.Fonts.Add(fontKey, trueTypeFontData);
+                }
+            }
+
+            int bitmapFontCount = pakReader.ReadMapHeader();
+
+            if (bitmapFontCount > 0)
+            {
+                pak.BitmapFonts = new Dictionary<string, BitmapFontData>();
+
+                for (int i = 0; i < bitmapFontCount; ++i)
+                {
+                    var fontKey = pakReader.ReadString();
+
+                    pakReader.ReadArrayHeader();
+
+                    var fontId = pakReader.ReadString();
+
+                    var bitmapFontData = new BitmapFontData
+                    {
+                        Id = fontId,
+                        Size = pakReader.ReadInt32(),
+                        LineSpacing = pakReader.ReadInt32()
+                    };
+
+                    pakReader.ReadArrayHeader();
+
+                    var fontImageDataId = pakReader.ReadString();
+                    var fontImageData = pakReader.ReadBytes();
+                    int fontImageWidth = pakReader.ReadInt32();
+                    int fontImageHeight = pakReader.ReadInt32();
+
+                    bitmapFontData.FontSheet = new ImageData()
+                    {
+                        Id = fontImageDataId,
+                        Width = fontImageWidth,
+                        Height = fontImageHeight,
+                        Data = fontImageData?.ToArray()
+                    };
+
+                    int charCount = pakReader.ReadArrayHeader();
+
+                    if (charCount > 0)
+                    {
+                        bitmapFontData.Chars = new char[charCount];
+
+                        for (int j = 0; j < charCount; ++j)
+                        {
+                            bitmapFontData.Chars[j] = pakReader.ReadChar();
+                        }
+                    }
+
+                    int glyphRectCount = pakReader.ReadArrayHeader();
+
+                    if (glyphRectCount > 0)
+                    {
+                        bitmapFontData.GlyphRegions = new SRect[glyphRectCount];
+
+                        for (int k = 0; k < glyphRectCount; ++k)
                         {
                             pakReader.ReadArrayHeader();
 
@@ -249,33 +351,60 @@ namespace BLITZZ.Content
                             int w = pakReader.ReadInt32();
                             int h = pakReader.ReadInt32();
 
-                            fontData.GlyphCroppings[l] = (x, y, w, h);
+                            bitmapFontData.GlyphRegions[k] = new SRect(x, y, w, h);
                         }
                     }
 
-                    int glyphKerningsCount = pakReader.ReadArrayHeader();
+                    int glyphOffsetsCount = pakReader.ReadArrayHeader();
 
-                    if (glyphKerningsCount > 0)
+                    if (glyphOffsetsCount > 0)
                     {
-                        fontData.GlyphKernings = new (float X, float Y, float Z)[glyphKerningsCount];
+                        bitmapFontData.GlyphOffsets = new SVector2[glyphOffsetsCount];
 
-                        for (int k = 0; k < glyphKerningsCount; ++k)
+                        for (int l = 0; l < glyphOffsetsCount; ++l)
                         {
                             pakReader.ReadArrayHeader();
 
                             float x = (float) pakReader.ReadDouble();
-                            float y = (float)pakReader.ReadDouble();
-                            float z = (float)pakReader.ReadDouble();
+                            float y = (float) pakReader.ReadDouble();
 
-                            fontData.GlyphKernings[k] = new (x, y, z);
+                            bitmapFontData.GlyphOffsets[l] = new SVector2(x, y);
                         }
                     }
 
-                    fontData.LineSpacing = pakReader.ReadInt32();
-                    fontData.Spacing = pakReader.ReadInt32();
-                    fontData.DefaultChar = pakReader.ReadChar();
+                    int glyphXAdvancesCount = pakReader.ReadArrayHeader();
 
-                    pak.Fonts.Add(fontKey, fontData);
+                    if (glyphXAdvancesCount > 0)
+                    {
+                        bitmapFontData.GlyphXAdvances = new float[glyphXAdvancesCount];
+
+                        for (int k = 0; k < glyphXAdvancesCount; ++k)
+                        {
+                            pakReader.ReadArrayHeader();
+
+                            float xAdvance = (float) pakReader.ReadDouble();
+
+                            bitmapFontData.GlyphXAdvances[k] = xAdvance;
+                        }
+                    }
+
+                    int kerningsCount = pakReader.ReadArrayHeader();
+
+                    if (kerningsCount > 0)
+                    {
+                        bitmapFontData.GlyphKernings = new (char First, char Second, float Amount)[kerningsCount];
+
+                        for (int k = 0; k < kerningsCount; ++k)
+                        {
+                            char first = pakReader.ReadChar();
+                            char second = pakReader.ReadChar();
+                            float amount = (float) pakReader.ReadDouble();
+
+                            bitmapFontData.GlyphKernings[k] = (first, second, amount);
+                        }
+                    }
+
+                    pak.BitmapFonts.Add(fontKey, bitmapFontData);
                 }
             }
 
@@ -295,20 +424,21 @@ namespace BLITZZ.Content
 
                 var textId = pakReader.ReadString();
 
-                int textRowCount = pakReader.ReadArrayHeader();
+                var textBytes = pakReader.ReadBytes();
 
-                var textData = new TextFileData()
+                if (textBytes.HasValue)
                 {
-                    Id = textId,
-                    TextData = new byte[textRowCount][]
-                };
+                    var textData = new TextFileData()
+                    {
+                        Id = textId,
+                        TextData = textBytes.Value.ToArray()
 
-                for (int i = 0; i < textRowCount; ++i)
-                {
-                    textData.TextData[i] = pakReader.ReadBytes().Value.ToArray();
+                    };
+
+                    pak.TextFiles.Add(textKey, textData);
                 }
 
-                pak.TextFiles.Add(textKey, textData);
+               
             }
 
             // =============================================================
@@ -337,7 +467,7 @@ namespace BLITZZ.Content
 
                 var data = pakReader.ReadBytes().Value.ToArray();
 
-                Unsafe.CopyBlockUnaligned(ref audioFileData.Data[0], ref data[0], (uint)dataLength);
+                Unsafe.CopyBlockUnaligned(ref audioFileData.Data[0], ref data[0], (uint) dataLength);
 
                 audioFileData.Streamed = pakReader.ReadBoolean();
 
@@ -347,6 +477,13 @@ namespace BLITZZ.Content
             pak.TotalResourcesCount = pakReader.ReadInt32();
 
             return pak;
+        }
+
+        public static AssetPak Load(string path)
+        {
+            using var stream = File.OpenRead(path);
+
+            return Load(stream);
         }
     }
 }

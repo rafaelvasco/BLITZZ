@@ -21,7 +21,7 @@ namespace BLITZZ
 
         public static implicit operator Vector2(SVector2 v)
         {
-            throw new NotImplementedException();
+            return new (v.X, v.Y);
         }
     }
 }

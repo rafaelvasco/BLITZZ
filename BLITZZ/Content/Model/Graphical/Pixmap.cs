@@ -1,47 +1,71 @@
-﻿using BLITZZ.Gfx;
+﻿using System;
+using BLITZZ.Gfx;
 using STB;
-using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using BLITZZ.Native.BGFX;
 
 namespace BLITZZ.Content
 {
     public class Pixmap : DisposableResource
     {
-        public int Width { get; private set; }
+        public int Width { get; }
 
-        public int Height { get; private set; }
+        public int Height { get; }
 
-        public byte[] Data => _pixelData;
+        public byte[] Data { get; private set; }
 
         public int SizeBytes { get; }
 
-        public int Stride => Width * 4;
+        public int Stride => Width * _bytesPerPixel;
 
-        private byte[] _pixelData;
+        private readonly int _bytesPerPixel;
 
-
-        internal Pixmap(byte[] srcData, int width, int height)
+        internal Pixmap(IntPtr srcData, int width, int height, int bytesPerPixel)
         {
-            this.Width = width;
-            this.Height = height;
-            this.SizeBytes = srcData.Length;
-            this._pixelData = new byte[srcData.Length];
-            Unsafe.CopyBlockUnaligned(ref _pixelData[0], ref srcData[0], (uint)SizeBytes);
+            _bytesPerPixel = bytesPerPixel;
 
-            ConvertToEngineRepresentation();
+            Width = width;
+            Height = height;
+            SizeBytes = width * height * bytesPerPixel;
+            Data = new byte[SizeBytes];
+
+            unsafe
+            {
+                Unsafe.CopyBlockUnaligned(ref Data[0], ref Unsafe.AsRef<byte>(srcData.ToPointer()), (uint)SizeBytes);    
+            }
+
+            if (Graphics.TextureFormat == TextureFormat.BGRA8)
+            {
+                ConvertToBgra();
+            }
+        }
+
+        internal Pixmap(byte[] srcData, int width, int height, int bytesPerPixel = 4)
+        {
+            _bytesPerPixel = bytesPerPixel;
+            Width = width;
+            Height = height;
+            SizeBytes = srcData.Length;
+            Data = new byte[srcData.Length];
+            Unsafe.CopyBlockUnaligned(ref Data[0], ref srcData[0], (uint)SizeBytes);
+
+            if (Graphics.TextureFormat == TextureFormat.BGRA8)
+            {
+                ConvertToBgra();
+            }
         }
 
         internal Pixmap(int width, int height, Color fillColor = default)
         {
-            this.Width = width;
-            this.Height = height;
-            this.SizeBytes = width * height;
+            Width = width;
+            Height = height;
+            SizeBytes = width * height;
 
             int length = width * height * 4;
 
-            _pixelData = new byte[length];
+            Data = new byte[length];
 
             Blitter.Begin(this);
 
@@ -58,13 +82,12 @@ namespace BLITZZ.Content
 
             Assets.RegisterRuntimeLoaded(pixmap);
 
-
             return pixmap;
         }
 
         protected override void FreeManagedResources()
         {
-            _pixelData = null;
+            Data = null;
         }
 
         public void SaveToFile(string path)
@@ -72,34 +95,12 @@ namespace BLITZZ.Content
             using var stream = File.OpenWrite(path);
 
             var image_writer = new ImageWriter();
-            image_writer.WritePng(_pixelData, Width, Height, ColorComponents.RedGreenBlueAlpha, stream);
+            image_writer.WritePng(Data, Width, Height, ColorComponents.RedGreenBlueAlpha, stream);
         }
 
-        private unsafe void ConvertToExportRepresentation()
+        private unsafe void ConvertToBgra(bool premultiplyAlpha = true)
         {
-            var pd = _pixelData;
-
-            fixed (byte* p = &MemoryMarshal.GetArrayDataReference(pd))
-            {
-                var len = pd.Length - 4;
-                for (int i = 0; i <= len; i += 4)
-                {
-                    byte b = *(p + i);
-                    byte g = *(p + i + 1);
-                    byte r = *(p + i + 2);
-                    byte a = *(p + i + 3);
-
-                    *(p + i) = r;
-                    *(p + i + 1) = g;
-                    *(p + i + 2) = b;
-                    *(p + i + 3) = a;
-                }
-            }
-        }
-
-        private unsafe void ConvertToEngineRepresentation(bool premultiplyAlpha = false)
-        {
-            var pd = _pixelData;
+            var pd = Data;
 
             fixed (byte* p = &MemoryMarshal.GetArrayDataReference(pd))
             {

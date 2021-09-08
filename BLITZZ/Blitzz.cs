@@ -2,6 +2,7 @@
 using System.Threading;
 using BLITZZ.Content;
 using BLITZZ.Gfx;
+using BLITZZ.Input;
 using BLITZZ.Logging;
 using BLITZZ.Threading;
 
@@ -11,27 +12,36 @@ namespace BLITZZ
     {
         private readonly Log _log = LogManager.GetForCurrentAssembly();
 
-        public string GameTitle { get; private set; }
+        public static Blitzz Instance { get; private set; }
 
-        public GameInfo GameInfo { get; private set; }
+        public string GameTitle { get; }
+
+        public GameInfo GameInfo { get; }
 
         public bool Running { get; private set; }
 
-        public Blitzz(string title, int width, int height, bool fullscreen = false)
+        public Blitzz()
         {
+            Instance = this;
+
             _log.Info("BLITZZ Engine Starting");
 
-            GameTitle = title;
+            var gameInfo = AssetLoader.LoadGameInfo();
 
-            GameInfo = AssetLoader.LoadGameInfo();
+            GameInfo.AssumeDefaults(ref gameInfo);
+
+            GameTitle = gameInfo.Title;
+
+            GameInfo = gameInfo;
 
             try
             {
                 InitializeThreading();
                 InitializePlatform();
-                InitializeGraphics(width, height, fullscreen);
+                InitializeGraphics(gameInfo.ResolutionWidth, gameInfo.ResolutionHeight, gameInfo.StartFullscreen);
                 InitializeAudio();
                 InitializeContent();
+                InitializeInput();
             }
             catch (Exception e)
             {
@@ -48,6 +58,8 @@ namespace BLITZZ
         public Action LoadContent;
 
         public Action<float> Update;
+
+        public Action Draw;
 
         public Action<float> FixedUpdate;
 
@@ -104,9 +116,39 @@ namespace BLITZZ
         {
             Assets.Initialize(GameInfo);
             Blitter.GetDefaultAssets();
+
         }
 
-        private void InitializeAudio()
+        private void InitializeInput()
+        {
+            var gameControllerDb = Assets.Get<TextFile>("gamecontrollerdb");
+
+            Controller.SetMappingsDB(gameControllerDb.Text);
+
+#if DEBUG
+            Keyboard.KeyPressed += (args =>
+            {
+                if (args.KeyCode == KeyCode.Escape)
+                {
+                    Quit();
+                }
+                else if (args.KeyCode == KeyCode.F11)
+                {
+                    if (GameWindow.IsFullScreen)
+                    {
+                        GameWindow.SetWindowSize(1);
+                    }
+                    else
+                    {
+                        GameWindow.GoFullscreen();
+                    }
+                }
+            });
+#endif
+            
+        }
+
+        private static void InitializeAudio()
         {
         }
 
@@ -114,7 +156,7 @@ namespace BLITZZ
         {
             Assets.FreeEverything();
             Graphics.Terminate();
-            GameWindow.Terminate();
+            GameWindow.Destroy();
             GamePlatform.Terminate();
         }
 

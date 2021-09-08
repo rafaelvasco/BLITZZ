@@ -10,8 +10,8 @@ namespace BLITZZ.Content.Font
     {
 
         public int Size;
-        public bool KerningEnabled;
-        public Range[] CharRanges;
+        public CharRange[] CharRanges;
+        public int LineSpace;
         public bool UseHinting;
         public bool UseAutoHinting;
         public HintingMode HintMode;
@@ -23,11 +23,24 @@ namespace BLITZZ.Content.Font
     {
         private static FreeTypeLibrary _library;
 
+        private const int DefaultLineSpace = 20;
+
         public static unsafe TrueTypeFontData Build(string id, string relativePath, FontBuildProps buildProps) 
         {
+            if (buildProps.LineSpace <= 0)
+            {
+                buildProps.LineSpace = DefaultLineSpace;
+            }
+
             _library = new FreeTypeLibrary();
 
-            TrueTypeFontData result = new ();
+            TrueTypeFontData result = new()
+            {
+                Id = id,
+                Size = buildProps.Size, 
+                LineSpacing = buildProps.LineSpace
+            };
+
 
             FreeTypeFaceFacade freeTypeFontData;
             
@@ -55,24 +68,23 @@ namespace BLITZZ.Content.Font
 
             void PopulateChars()
             {
-                char[] wantedChars;
-
                 var validChars = new List<char>();
 
-                if (buildProps.CharRanges != null)
-                {
-                    wantedChars = GenerateCharArrayFromRanges(buildProps.CharRanges);
-                }
-                else
-                {
-                    wantedChars = GenerateCharArrayFromRanges(1..512);
-                }
+                var wantedChars = buildProps.CharRanges != null ? 
+                    
+                    GenerateCharArrayFromRanges(buildProps.CharRanges) : 
+                        
+                    GenerateCharArrayFromRanges(CharRange.BasicLatin);
 
                 for (int i = 0; i < wantedChars.Length; ++i)
                 {
                     if(FontFileContainsGlyphChar(wantedChars[i]))
                     {
                         validChars.Add(wantedChars[i]);
+                    }
+                    else
+                    {
+                        Console.WriteLine( $"[WARNING] Missing char '{char.ToString(wantedChars[i])}' on font file.");
                     }
                 }
 
@@ -83,32 +95,30 @@ namespace BLITZZ.Content.Font
 
             bool FontFileContainsGlyphChar(char c)
             {
-                unsafe
-                {
-                    return FT.FT_Get_Char_Index(freeTypeFontData.Face, c) != 0;
-                }
+                return FT.FT_Get_Char_Index(freeTypeFontData.Face, c) != 0;
             }
 
-            char[] GenerateCharArrayFromRanges(params Range[] ranges)
+
+            static char[] GenerateCharArrayFromRanges(params CharRange[] ranges)
             {
                 int length = 0;
 
                 for (int i = 0; i < ranges.Length; ++i)
                 {
-                    length += ranges[i].End.Value - ranges[i].Start.Value + 1;
+                    length += ranges[i].End - ranges[i].Start + 1;
                 }
 
-                var result = new char[length];
+                var charArray = new char[length];
 
                 int index = 0;
 
                 foreach (var range in ranges)
                 {
-                    for (var c = (char)range.Start.Value; c < (char)range.End.Value; c++)
-                        result[index++] = c;
+                    for (var c = (char)range.Start; c < (char)range.End; c++)
+                        charArray[index++] = c;
                 }
 
-                return result;
+                return charArray;
             }
 
             // =============================================================
@@ -116,10 +126,7 @@ namespace BLITZZ.Content.Font
 
             void SetFontPixelSize()
             {
-                int matchingSize = freeTypeFontData.FindNearestMatchingPixelSize(buildProps.Size);
-                FT.FT_Set_Pixel_Sizes(freeTypeFontData.Face, 0, (uint)matchingSize);
-                result.Size = matchingSize;
-                result.LineSpacing = freeTypeFontData.GlyphMetricHeight;
+                FT.FT_Set_Pixel_Sizes(freeTypeFontData.Face, 0, (uint)buildProps.Size);
             }
 
             // =============================================================
@@ -127,7 +134,7 @@ namespace BLITZZ.Content.Font
 
             void PopulateKernelInfo()
             {
-                result.CharKernings = new Dictionary<int, int>();
+                result.GlyphKernings = new Dictionary<int, float>();
 
                 for (var i = 0; i < result.Chars.Length; ++i)
                 {
@@ -137,11 +144,11 @@ namespace BLITZZ.Content.Font
                     var key = (left << 16) | right;
 
                     var amount = GetTtfKerning(left, right);
-                    result.CharKernings.Add(key, amount);
+                    result.GlyphKernings.Add(key, amount);
                 }
             }
 
-            unsafe int GetTtfKerning(char left, char right)
+            int GetTtfKerning(char left, char right)
             {
                 var leftIndex = FT.FT_Get_Char_Index(freeTypeFontData.Face, left);
                 var rightIndex = FT.FT_Get_Char_Index(freeTypeFontData.Face, right);
@@ -156,15 +163,15 @@ namespace BLITZZ.Content.Font
             // =============================================================
             // =============================================================
 
-            unsafe void PopulateAtlasAndGlyphs()
+            void PopulateAtlasAndGlyphs()
             {
                 var chars = result.Chars;
 
-                result.CharXAdvances = new int[chars.Length];
-                result.CharBearings = new SVector2[chars.Length];
-                result.CharRegions = new SRect[chars.Length];
+                result.GlyphXAdvances = new float[chars.Length];
+                result.GlyphOffsets = new SVector2[chars.Length];
+                result.GlyphRegions = new SRect[chars.Length];
 
-                var maxDim = MathF.Ceiling(MathF.Sqrt(chars.Length));
+                var maxDim = (1 + result.LineSpacing) * MathF.Ceiling(MathF.Sqrt(chars.Length));
 
                 var imageWidth = 1;
 
@@ -186,7 +193,6 @@ namespace BLITZZ.Content.Font
                     for (var i = 0; i < chars.Length; i++)
                     {
                         var character = chars[i];
-
 
                         var glyphFlags = FT.FT_LOAD_RENDER | FT.FT_LOAD_PEDANTIC;
                         var renderMode = FT_Render_Mode.FT_RENDER_MODE_NORMAL;
@@ -238,13 +244,13 @@ namespace BLITZZ.Content.Font
 
                         RenderGlyphToBitmap(bmp, penX, penY, imageWidth, pixels);
 
-                        result.CharRegions[i] = new SRect(penX, penY, (int)bmp.width, (int)bmp.rows);
-                        result.CharBearings[i] = new SVector2(freeTypeFontData.GlyphHoriBearingX, freeTypeFontData.GlyphHoriBearingY);
-                        result.CharXAdvances[i] = freeTypeFontData.FaceRec->glyph->advance.x.ToInt32() >> 6;
+                        result.GlyphRegions[i] = new SRect(penX, penY, (int)bmp.width, (int)bmp.rows);
+                        result.GlyphOffsets[i] = new SVector2(freeTypeFontData.GlyphHoriBearingX, freeTypeFontData.GlyphHoriBearingY);
+                        result.GlyphXAdvances[i] = freeTypeFontData.FaceRec->glyph->advance.x.ToInt32() >> 6;
 
-                        if (result.CharBearings[i].Y > maxBearingY)
+                        if (result.GlyphOffsets[i].Y > maxBearingY)
                         {
-                            maxBearingY = (int)result.CharBearings[i].Y;
+                            maxBearingY = (int)result.GlyphOffsets[i].Y;
                         }
 
                         penX += (int)bmp.width + 1;
@@ -252,20 +258,20 @@ namespace BLITZZ.Content.Font
 
                     result.FontSheet = new ImageData()
                     {
-                        Id = id + "_sheet",
+                        Id = id + "_atlas",
                         Width = imageWidth, 
                         Height = imageHeight,
                         Data = ConvertFontPixelData(pixels, imageWidth, imageHeight)
                     };
                 }
 
-                for (int i = 0; i < result.CharBearings.Length; ++i)
+                for (int i = 0; i < result.GlyphOffsets.Length; ++i)
                 {
-                    result.CharBearings[i] = new SVector2(result.CharBearings[i].X, -result.CharBearings[i].Y + maxBearingY);
+                    result.GlyphOffsets[i] = new SVector2(result.GlyphOffsets[i].X, -result.GlyphOffsets[i].Y + maxBearingY);
                 }
             }
 
-            unsafe void RenderGlyphToBitmap(FT_Bitmap bmp, int penX, int penY, int texWidth, byte* pixels)
+            void RenderGlyphToBitmap(FT_Bitmap bmp, int penX, int penY, int texWidth, byte* pixels)
             {
                 var buffer = (byte*)freeTypeFontData.GlyphBitmapPtr;
 
@@ -289,7 +295,7 @@ namespace BLITZZ.Content.Font
                 }
             }
 
-            byte[] ConvertFontPixelData(byte* pixels, int texWidth, int texHeight)
+            static byte[] ConvertFontPixelData(byte* pixels, int texWidth, int texHeight)
             {
                 var surfaceSize = texWidth * texHeight * 4;
 
@@ -309,7 +315,7 @@ namespace BLITZZ.Content.Font
                 return managedSurfaceData;
             }
 
-            unsafe bool IsMonochromeBitSet(FT_GlyphSlotRec* glyph, int x, int y)
+            static bool IsMonochromeBitSet(FT_GlyphSlotRec* glyph, int x, int y)
             {
                 var pitch = glyph->bitmap.pitch;
                 var buf = (byte*)glyph->bitmap.buffer.ToPointer();

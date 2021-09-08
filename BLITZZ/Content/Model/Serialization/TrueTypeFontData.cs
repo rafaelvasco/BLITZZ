@@ -22,16 +22,16 @@ namespace BLITZZ.Content
         public char[] Chars;
 
         [Key(5)]
-        public SRect[] CharRegions;
+        public SRect[] GlyphRegions;
 
         [Key(6)]
-        public SVector2[] CharBearings;
+        public SVector2[] GlyphOffsets;
 
         [Key(7)]
-        public int[] CharXAdvances;
+        public float[] GlyphXAdvances;
 
         [Key(8)]
-        public Dictionary<int,int> CharKernings;
+        public Dictionary<int,float> GlyphKernings;
 
         
     }

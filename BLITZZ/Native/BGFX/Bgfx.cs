@@ -1,65 +1,12 @@
 ﻿using BLITZZ.Content;
 using System;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Microsoft.VisualBasic;
 
 namespace BLITZZ.Native.BGFX
 {
-    internal unsafe struct RangeAccessor<T> where T : struct
-    {
-        private static readonly int SizeOfT = Unsafe.SizeOf<T>();
-
-        public readonly void* data;
-        public readonly int count;
-        public IntPtr Ptr => new IntPtr(data);
-        public RangeAccessor(IntPtr data, int count) : this(data.ToPointer(), count) { }
-        public RangeAccessor(void* data, int count)
-        {
-            this.data = data;
-            this.count = count;
-        }
-
-        public ref T this[int index]
-        {
-            get
-            {
-                if (index < 0 || index >= count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
-
-                return ref Unsafe.AsRef<T>((byte*)data + SizeOfT * index);
-            }
-        }
-    }
-
-    internal unsafe struct RangePtrAccessor<T> where T : struct
-    {
-        public readonly void* data;
-        public readonly int count;
-
-        public RangePtrAccessor(IntPtr data, int count) : this(data.ToPointer(), count) { }
-        public RangePtrAccessor(void* data, int count)
-        {
-            this.data = data;
-            this.count = count;
-        }
-
-        public T this[int index]
-        {
-            get
-            {
-                if (index < 0 || index >= count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
-
-                return Unsafe.Read<T>((byte*)data + sizeof(void*) * index);
-            }
-        }
-    }
-
-
     internal static unsafe class Bgfx
     {
         public static void SetPlatformData(IntPtr windowHandle)
@@ -74,17 +21,14 @@ namespace BLITZZ.Native.BGFX
         public static Init Initialize(int resolutionWidth, int resolutionHeight, RendererType renderer, ICallbackHandler callbackHandler)
         {
             Init init = new();
-            unsafe
-            {
-                BgfxNative.init_ctor(&init);
-                init.type = renderer;
-                init.vendorId = (ushort)PciIdFlags.None;
-                init.resolution.width = (uint)resolutionWidth;
-                init.resolution.height = (uint)resolutionHeight;
-                init.resolution.reset = (uint)ResetFlags.None;
-                init.callback = CallbackShim.CreateShim(callbackHandler);
-                BgfxNative.init(&init);
-            }
+            BgfxNative.init_ctor(&init);
+            init.type = renderer;
+            init.vendorId = (ushort)PciIdFlags.None;
+            init.resolution.width = (uint)resolutionWidth;
+            init.resolution.height = (uint)resolutionHeight;
+            init.resolution.reset = (uint)ResetFlags.None;
+            init.callback = CallbackShim.CreateShim(callbackHandler);
+            BgfxNative.init(&init);
 
             return init;
         }
@@ -129,26 +73,12 @@ namespace BLITZZ.Native.BGFX
             BgfxNative.set_view_rect(viewId, (ushort)x, (ushort)y, (ushort)resolutionWidth, (ushort)resolutionHeight);
         }
 
-        public static void SetViewProjection(ushort viewId, ref Matrix4x4 view, ref Matrix4x4 projection)
+        public static void SetViewTransformMatrices(ushort viewId, ref float viewTransform, ref float projectionTransform)
         {
-            BgfxNative.set_view_transform(
-                viewId,
-                Unsafe.AsPointer(ref view.M11),
-                Unsafe.AsPointer(ref projection.M11)
-            );
+            BgfxNative.set_view_transform(viewId, Unsafe.AsPointer(ref viewTransform) , Unsafe.AsPointer(ref projectionTransform) );
         }
 
-        public static void SetProjection(ushort viewId, ref float projection)
-        {
-            BgfxNative.set_view_transform(viewId, null, Unsafe.AsPointer(ref projection));
-        }
-
-        public static void SetViewTransform(ushort viewId, float[] view, float[] projection)
-        {
-            BgfxNative.set_view_transform(viewId, view != null ? Unsafe.AsPointer(ref view[0]) : null, projection != null ? Unsafe.AsPointer(ref projection[0]) : null);
-        }
-
-        public static TransientVertexBuffer CreateTransientVertexBuffer<T>(Span<T> vertices, VertexLayout layout) where T : struct
+        public static TransientVertexBuffer CreateTransientVertexBuffer<T>(Span<T> vertices, VertexLayoutData layout) where T : struct
         {
             var transient_vtx_buffer = new TransientVertexBuffer();
 
@@ -201,9 +131,8 @@ namespace BLITZZ.Native.BGFX
 
         private static ShaderHandle CreateShader(byte[] bytes)
         {
-            ShaderHandle shader;
             var data = AllocGraphicsMemoryBuffer(bytes);
-            shader = BgfxNative.create_shader(data);
+            var shader = BgfxNative.create_shader(data);
             return shader;
         }
 
@@ -247,7 +176,7 @@ namespace BLITZZ.Native.BGFX
             BgfxNative.destroy_index_buffer(indexBuffer);
         }
 
-        public static VertexBufferHandle CreateVertexBuffer<T>(T[] vertices, VertexLayout layout, BufferFlags flags = BufferFlags.None) where T : struct
+        public static VertexBufferHandle CreateVertexBuffer<T>(T[] vertices, VertexLayoutData layout, BufferFlags flags = BufferFlags.None) where T : struct
         {
             var memory = GetMemoryBufferReference(vertices);
             var vertex_buffer = BgfxNative.create_vertex_buffer(memory, &layout, (ushort)flags);
@@ -283,13 +212,13 @@ namespace BLITZZ.Native.BGFX
             BgfxNative.update_dynamic_index_buffer(handle, (uint)startIndex, memory);
         }
 
-        public static DynamicVertexBufferHandle CreateDynamicVertexBuffer(int vertexCount, VertexLayout layout, BufferFlags flags = BufferFlags.None)
+        public static DynamicVertexBufferHandle CreateDynamicVertexBuffer(int vertexCount, VertexLayoutData layout, BufferFlags flags = BufferFlags.None)
         {
             var dyn_vertex_buffer = BgfxNative.create_dynamic_vertex_buffer((uint)vertexCount, &layout, (ushort)flags);
             return dyn_vertex_buffer;
         }
 
-        public static DynamicVertexBufferHandle CreateDynamicVertexBuffer<T>(T[] vertices, VertexLayout layout, BufferFlags flags = BufferFlags.None) where T : struct
+        public static DynamicVertexBufferHandle CreateDynamicVertexBuffer<T>(T[] vertices, VertexLayoutData layout, BufferFlags flags = BufferFlags.None) where T : struct
         {
             var memory = GetMemoryBufferReference(vertices);
             var dyn_vertex_buffer = BgfxNative.create_dynamic_vertex_buffer_mem(memory, &layout, (ushort)flags);
@@ -395,9 +324,9 @@ namespace BLITZZ.Native.BGFX
             BgfxNative.set_view_frame_buffer(viewId, handle);
         }
 
-        public static int GetAvailableTransientVertexBuffers(int requiredVertexCount, VertexLayout layout)
+        public static int GetAvailableTransientVertexBuffers(int requiredVertexCount, VertexLayoutData layout)
         {
-            return (int)BgfxNative.get_avail_transient_vertex_buffer((uint)requiredVertexCount, (VertexLayout*)Unsafe.AsPointer(ref layout));
+            return (int)BgfxNative.get_avail_transient_vertex_buffer((uint)requiredVertexCount, (VertexLayoutData*)Unsafe.AsPointer(ref layout));
         }
 
         public static int GetAvailableTransientIndexBuffers(int numIndices)
@@ -488,19 +417,24 @@ namespace BLITZZ.Native.BGFX
             BgfxNative.destroy_uniform(uniform);
         }
 
-        public static void VertexLayoutBegin(VertexLayout layout, RendererType rendererType)
+        public static void VertexLayoutBegin(ref VertexLayoutData layout, RendererType rendererType)
         {
-            BgfxNative.vertex_layout_begin((VertexLayout*)Unsafe.AsPointer(ref layout), rendererType);
+            BgfxNative.vertex_layout_begin((VertexLayoutData*)Unsafe.AsPointer(ref layout), rendererType);
         }
 
-        public static void VertexLayoutAdd(VertexLayout layout, Attrib attrib, AttribType attribType, byte num, bool normalized, bool asInt)
+        public static void VertexLayoutAdd(ref VertexLayoutData layout, Attrib attrib, AttribType attribType, byte num, bool normalized, bool asInt)
         {
-            BgfxNative.vertex_layout_add((VertexLayout*)Unsafe.AsPointer(ref layout), attrib, num, attribType, normalized, asInt);
+            BgfxNative.vertex_layout_add((VertexLayoutData*)Unsafe.AsPointer(ref layout), attrib, num, attribType, normalized, asInt);
         }
 
-        public static void VertexLayoutEnd(VertexLayout layout)
+        public static void VertexLayoutSkip(ref VertexLayoutData layout, int count)
         {
-            BgfxNative.vertex_layout_end((VertexLayout*)Unsafe.AsPointer(ref layout));
+            BgfxNative.vertex_layout_skip((VertexLayoutData*) Unsafe.AsPointer(ref layout), (byte) count);
+        }
+
+        public static void VertexLayoutEnd(ref VertexLayoutData layout)
+        {
+            BgfxNative.vertex_layout_end((VertexLayoutData*)Unsafe.AsPointer(ref layout));
         }
 
         public static void RequestScreenShot(string path)
@@ -512,6 +446,43 @@ namespace BLITZZ.Native.BGFX
         {
             CallbackShim.FreeShim();
             BgfxNative.shutdown();
+        }
+
+        /// <summary>
+        /// Clears the debug text buffer.
+        /// </summary>
+        /// <param name="color">The color with which to clear the background.</param>
+        /// <param name="smallText"><c>true</c> to use a small font for debug output; <c>false</c> to use normal sized text.</param>
+        public static void DebugTextClear(DebugColor color = DebugColor.Black, bool smallText = false)
+        {
+            var attr = (byte)((byte)color << 4);
+            BgfxNative.dbg_text_clear(attr, smallText);
+        }
+
+        /// <summary>
+        /// Writes debug text to the screen.
+        /// </summary>
+        /// <param name="x">The X position, in cells.</param>
+        /// <param name="y">The Y position, in cells.</param>
+        /// <param name="foreColor">The foreground color of the text.</param>
+        /// <param name="backColor">The background color of the text.</param>
+        /// <param name="format">The format of the message.</param>
+        /// <param name="args">The arguments with which to format the message.</param>
+        public static void DebugTextWrite (int x, int y, DebugColor foreColor, DebugColor backColor, string format, params object[] args) {
+            DebugTextWrite(x, y, foreColor, backColor, string.Format(CultureInfo.CurrentCulture, format, args));
+        }
+
+        /// <summary>
+        /// Writes debug text to the screen.
+        /// </summary>
+        /// <param name="x">The X position, in cells.</param>
+        /// <param name="y">The Y position, in cells.</param>
+        /// <param name="foreColor">The foreground color of the text.</param>
+        /// <param name="backColor">The background color of the text.</param>
+        /// <param name="message">The message to write.</param>
+        public static void DebugTextWrite (int x, int y, DebugColor foreColor, DebugColor backColor, string message) {
+            var attr = (byte)(((byte)backColor << 4) | (byte)foreColor);
+            BgfxNative.dbg_text_printf((ushort)x, (ushort)y, attr, "%s", message);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

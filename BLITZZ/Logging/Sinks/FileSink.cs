@@ -6,7 +6,7 @@ namespace BLITZZ.Logging
     {
         public FileSink(string filePath)
             : base(new FileStream(
-                filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read
+                filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write
             ))
         {
         }

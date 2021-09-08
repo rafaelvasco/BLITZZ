@@ -11,9 +11,9 @@ namespace BLITZZ
         internal delegate void PlatformEventHandler(SDL2.SDL_Event ev);
         internal delegate void PlatformWindowEventHandler(SDL2.SDL_WindowEvent ev);
 
-        private static Dictionary<SDL2.SDL_EventType, PlatformEventHandler> _eventHandlers = new();
-        private static Dictionary<SDL2.SDL_WindowEventID, PlatformWindowEventHandler> _windowEventHandlers = new();
-        private static Dictionary<SDL2.SDL_EventType, bool> _discardedEventTypes = new();
+        private static readonly Dictionary<SDL2.SDL_EventType, PlatformEventHandler> _eventHandlers = new();
+        private static readonly Dictionary<SDL2.SDL_WindowEventID, PlatformWindowEventHandler> _windowEventHandlers = new();
+        private static readonly Dictionary<SDL2.SDL_EventType, bool> _discardedEventTypes = new();
 
         internal static void Process(SDL2.SDL_Event ev)
         {
